@@ -379,20 +379,14 @@
     <div class="loading">carregando dados das nuvens...</div>
   </div>
 
-  <!-- ── Local Section ── -->
-  <div class="section-label" style="margin-top: 8px;">homelab local · ubuntu 24 lts</div>
-  <div id="local-content">
-    <div class="loading">carregando recursos locais...</div>
-  </div>
-
   <!-- ── Pricing Comparator ── -->
-  <div class="section-label" style="margin-top: 8px;">comparador de preços · instâncias compute</div>
+  <div class="section-label" style="margin-top: 8px;">cloud · comparador de preços · instâncias compute</div>
   <div id="pricing-content">
     <div class="pricing-controls">
       <div class="pricing-slider-group">
         <label>vCPUs</label>
         <input type="range" min="1" max="32" value="4" step="1" id="sl-vcpu" oninput="onSlider()">
-        <span class="slider-val" id="val-vcpu">4</span>
+        <span class="slider-val" id="val-vcpu">4 vCPUs</span>
       </div>
       <div class="pricing-slider-group">
         <label>Memória</label>
@@ -405,7 +399,15 @@
         <span class="slider-val" id="val-hours">730h</span>
       </div>
     </div>
-    <div id="pricing-results"><div class="loading">mova os sliders para comparar...</div></div>
+    <div id="pricing-results"><div class="loading">buscando preços...</div></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Local Section ── -->
+  <div class="section-label" style="margin-top: 8px;">homelab local · ubuntu 24 lts</div>
+  <div id="local-content">
+    <div class="loading">carregando recursos locais...</div>
   </div>
 
   <footer>
