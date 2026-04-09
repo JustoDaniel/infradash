@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfraDash · Justo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e28;
+    --border: rgba(255,255,255,.07);
+    --border-accent: rgba(255,255,255,.13);
+    --text: #e8eaf0;
+    --muted: #5a5f72;
+    --muted2: #8a90a4;
+    --green: #22c55e;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --blue: #60a5fa;
+    --aws: #f59e0b;
+    --gcp: #3b82f6;
+    --oci: #ef4444;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Layout ─────────────────────────── */
+  .shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+  }
+
+  /* ── Header ─────────────────────────── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 500; color: #fff;
+  }
+  .brand-name { font-size: 17px; font-weight: 500; letter-spacing: -.3px; }
+  .brand-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .live-dot {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 11px; color: var(--muted2);
+  }
+  .live-dot::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: .3; }
+  }
+  .refresh-btn {
+    background: var(--surface2); border: 1px solid var(--border-accent);
+    color: var(--muted2); cursor: pointer; padding: 6px 14px;
+    border-radius: var(--radius-sm); font-family: var(--mono); font-size: 11px;
+    transition: color .15s, border-color .15s;
+  }
+  .refresh-btn:hover { color: var(--text); border-color: rgba(255,255,255,.25); }
+
+  /* ── Section labels ──────────────────── */
+  .section-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── Cloud grid ──────────────────────── */
+  .cloud-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 900px) { .cloud-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 580px) { .cloud-grid { grid-template-columns: 1fr; } }
+
+  .cloud-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .cloud-card:hover { border-color: var(--border-accent); }
+  .cloud-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .cloud-card.aws::before { background: var(--aws); }
+  .cloud-card.gcp::before { background: var(--gcp); }
+  .cloud-card.oci::before { background: var(--oci); }
+
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .provider-pill {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    padding: 3px 9px; border-radius: 99px;
+    border: 1px solid;
+  }
+  .provider-pill.aws { color: var(--aws); border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.08); }
+  .provider-pill.gcp { color: var(--blue); border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.08); }
+  .provider-pill.oci { color: var(--red); border-color: rgba(239,68,68,.3); background: rgba(239,68,68,.08); }
+
+  .provider-name { font-size: 13px; color: var(--muted2); }
+  .card-total { font-family: var(--mono); font-size: 28px; font-weight: 400; margin-bottom: 4px; letter-spacing: -.5px; }
+  .card-delta { font-family: var(--mono); font-size: 11px; margin-bottom: 16px; }
+  .delta-up { color: var(--red); }
+  .delta-down { color: var(--green); }
+  .delta-flat { color: var(--muted); }
+
+  /* Serviços */
+  .services-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .service-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+  }
+  .service-name {
+    font-size: 12px; color: var(--muted2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .service-cost {
+    font-family: var(--mono); font-size: 11px; color: var(--text); white-space: nowrap;
+  }
+  .service-bar-track {
+    grid-column: 1 / -1;
+    height: 2px; background: var(--surface2); border-radius: 1px; overflow: hidden;
+    margin-top: -4px;
+  }
+  .service-bar-fill { height: 100%; border-radius: 1px; opacity: .7; }
+
+  .card-error {
+    font-family: var(--mono); font-size: 11px; color: var(--red);
+    background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.2);
+    border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 8px;
+  }
+
+  /* ── Total bar ───────────────────────── */
+  .total-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .total-bar-label { font-size: 12px; color: var(--muted2); }
+  .total-bar-val { font-family: var(--mono); font-size: 22px; font-weight: 500; }
+  .total-bar-breakdown { display: flex; gap: 20px; flex-wrap: wrap; }
+  .breakdown-item { display: flex; flex-direction: column; align-items: flex-end; }
+  .breakdown-label { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .breakdown-val { font-family: var(--mono); font-size: 14px; }
+
+  /* ── Divisor ─────────────────────────── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 8px 0 28px; }
+
+  /* ── Local grid ──────────────────────── */
+  .local-top {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 580px) { .local-top { grid-template-columns: 1fr 1fr; } }
+
+  .resource-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .res-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; }
+  .res-free { font-family: var(--mono); font-size: 22px; font-weight: 400; margin-bottom: 2px; }
+  .res-sub { font-size: 11px; color: var(--muted2); margin-bottom: 10px; }
+  .gauge {
+    height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden;
+  }
+  .gauge-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+  .gauge-green { background: var(--green); }
+  .gauge-amber { background: var(--amber); }
+  .gauge-red { background: var(--red); }
+
+  /* ── VM table ────────────────────────── */
+  .vm-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .vm-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .vm-table th {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted);
+    padding: 11px 16px; text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .vm-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted2);
+    vertical-align: middle;
+  }
+  .vm-table tr:last-child td { border-bottom: none; }
+  .vm-table tr:hover td { background: rgba(255,255,255,.02); }
+  .vm-name { color: var(--text); font-weight: 400; display: flex; align-items: center; gap: 8px; }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    display: inline-block;
+  }
+  .status-on { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,.5); }
+  .status-off { background: var(--muted); }
+  .type-badge {
+    font-family: var(--mono); font-size: 10px; padding: 2px 7px;
+    border-radius: 99px; border: 1px solid;
+  }
+  .type-vm { color: var(--amber); border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.07); }
+  .type-ct { color: var(--green); border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.07); }
+
+  .status-on-text { color: var(--green); }
+  .status-off-text { color: var(--muted); }
+
+  /* Container badge */
+  .docker-section { margin-top: 12px; }
+  .docker-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--muted2);
+  }
+  .docker-row:last-child { border-bottom: none; }
+  .docker-name { color: var(--text); }
+  .docker-image { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  /* ── Loading / erro ──────────────────── */
+  .loading {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    text-align: center; padding: 40px; animation: blink 1.2s step-start infinite;
+  }
+  @keyframes blink { 50% { opacity: .3; } }
+
+  /* ── Footer ──────────────────────────── */
+  footer {
+    margin-top: 48px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 8px;
+  }
+  footer span { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  #footer-ts { color: var(--muted2); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">ID</div>
+      <div>
+        <div class="brand-name">InfraDash</div>
+        <div class="brand-sub">homelab · cloud control plane</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-dot" id="live-status">atualizando...</div>
+      <button class="refresh-btn" onclick="fetchAll()">↺ refresh</button>
+    </div>
+  </header>
+
+  <!-- ── Cloud Section ── -->
+  <div class="section-label">cloud · custo do mês atual</div>
+  <div id="cloud-content">
+    <div class="loading">carregando dados das nuvens...</div>
+  </div>
+
+  <!-- ── Local Section ── -->
+  <div class="section-label" style="margin-top: 8px;">homelab local · ubuntu 24 lts</div>
+  <div id="local-content">
+    <div class="loading">carregando recursos locais...</div>
+  </div>
+
+  <footer>
+    <span>justodaniel.com.br · infradash v1.0</span>
+    <span id="footer-ts">—</span>
+  </footer>
+</div>
+
+<script>
+const API = '/api';
+const REFRESH_CLOUD_MS = 60 * 60 * 1000; // 1h (respeita cache)
+const REFRESH_LOCAL_MS = 30 * 1000;        // 30s
+
+// ── Fetch principal ──────────────────────────────────────────
+async function fetchAll() {
+  document.getElementById('live-status').textContent = 'buscando...';
+  try {
+    const r = await fetch(`${API}/summary`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    renderCloud(data.cloud);
+    renderLocal(data.local);
+    const ts = new Date(data.ts * 1000).toLocaleString('pt-BR');
+    document.getElementById('footer-ts').textContent = `atualizado: ${ts}`;
+    document.getElementById('live-status').textContent = 'online';
+  } catch (e) {
+    document.getElementById('live-status').textContent = 'erro';
+    console.error(e);
+  }
+}
+
+// ── Render Cloud ─────────────────────────────────────────────
+function renderCloud(providers) {
+  if (!providers || !providers.length) {
+    document.getElementById('cloud-content').innerHTML = '<div class="loading">sem dados</div>';
+    return;
+  }
+
+  const total = providers.reduce((s, p) => s + (p.total || 0), 0);
+
+  let html = `<div class="cloud-grid">`;
+  for (const p of providers) {
+    const cls = p.provider.toLowerCase();
+    const deltaClass = p.delta_pct > 0 ? 'delta-up' : p.delta_pct < 0 ? 'delta-down' : 'delta-flat';
+    const deltaStr = p.delta_pct === 0
+      ? '— sem histórico'
+      : `${p.delta_pct > 0 ? '▲' : '▼'} ${Math.abs(p.delta_pct)}% vs mês anterior`;
+
+    let servicesHtml = '';
+    if (p.error) {
+      servicesHtml = `<div class="card-error">⚠ ${escHtml(p.error)}</div>`;
+    } else {
+      const maxCost = Math.max(...(p.services || []).map(s => s.cost), 1);
+      servicesHtml = `<ul class="services-list">`;
+      for (const svc of (p.services || [])) {
+        const pct = Math.round((svc.cost / maxCost) * 100);
+        const color = cls === 'aws' ? '#f59e0b' : cls === 'gcp' ? '#3b82f6' : '#ef4444';
+        servicesHtml += `
+          <li>
+            <div class="service-row">
+              <span class="service-name" title="${escHtml(svc.name)}">· ${escHtml(svc.name)}</span>
+              <span class="service-cost">$${svc.cost.toFixed(2)}</span>
+            </div>
+            <div class="service-bar-track">
+              <div class="service-bar-fill" style="width:${pct}%;background:${color};"></div>
+            </div>
+          </li>`;
+      }
+      servicesHtml += `</ul>`;
+    }
+
+    html += `
+      <div class="cloud-card ${cls}">
+        <div class="card-header">
+          <span class="provider-pill ${cls}">${p.provider}</span>
+          <span class="provider-name">${escHtml(p.label)}</span>
+        </div>
+        <div class="card-total">$${(p.total || 0).toFixed(2)}</div>
+        <div class="card-delta ${deltaClass}">${deltaStr}</div>
+        ${servicesHtml}
+      </div>`;
+  }
+  html += `</div>`;
+
+  // Barra de total
+  const awsP  = providers.find(p => p.provider === 'AWS');
+  const gcpP  = providers.find(p => p.provider === 'GCP');
+  const ociP  = providers.find(p => p.provider === 'OCI');
+  html += `
+    <div class="total-bar">
+      <div>
+        <div class="total-bar-label">total cloud · mês atual (USD)</div>
+        <div class="total-bar-val">$${total.toFixed(2)}</div>
+      </div>
+      <div class="total-bar-breakdown">
+        ${awsP ? `<div class="breakdown-item"><span class="breakdown-label">AWS</span><span class="breakdown-val" style="color:var(--aws)">$${awsP.total.toFixed(2)}</span></div>` : ''}
+        ${gcpP ? `<div class="breakdown-item"><span class="breakdown-label">GCP</span><span class="breakdown-val" style="color:var(--gcp)">$${gcpP.total.toFixed(2)}</span></div>` : ''}
+        ${ociP ? `<div class="breakdown-item"><span class="breakdown-label">OCI</span><span class="breakdown-val" style="color:var(--oci)">$${ociP.total.toFixed(2)}</span></div>` : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('cloud-content').innerHTML = html;
+}
+
+// ── Render Local ─────────────────────────────────────────────
+function renderLocal(local) {
+  if (!local) { return; }
+  const res = local.resources || {};
+  const vms = local.vms || [];
+  const containers = local.containers || [];
+
+  const gaugeClass = (pct) => pct > 85 ? 'gauge-red' : pct > 65 ? 'gauge-amber' : 'gauge-green';
+
+  const cpu = res.cpu || {};
+  const ram = res.ram || {};
+  const disk = res.disk || {};
+
+  let html = `<div class="local-top">`;
+
+  // CPU
+  html += `
+    <div class="resource-card">
+      <div class="res-label">CPU</div>
+      <div class="res-free">${cpu.free_pct ?? '—'}%</div>
+      <div class="res-sub">livre · ${cpu.pct ?? '—'}% em uso · ${cpu.cores_physical ?? '—'} cores físicos</div>
+      <div class="gauge"><div class="gauge-fill ${gaugeClass(cpu.pct ?? 0)}" style="width:${cpu.pct ?? 0}%"></div></div>
+    </div>`;
+
+  // RAM
+  html += `
+    <div class="resource-card">
+      <div class="res-label">RAM</div>
+      <div class="res-free">${ram.free_gb ?? '—'} GB</div>
+      <div class="res-sub">livre · ${ram.used_gb ?? '—'} GB em uso de ${ram.total_gb ?? '—'} GB total</div>
+      <div class="gauge"><div class="gauge-fill ${gaugeClass(ram.pct ?? 0)}" style="width:${ram.pct ?? 0}%"></div></div>
+    </div>`;
+
+  // Disco
+  html += `
+    <div class="resource-card">
+      <div class="res-label">Disco</div>
+      <div class="res-free">${disk.free_gb ?? '—'} GB</div>
+      <div class="res-sub">livre · ${disk.used_gb ?? '—'} GB em uso de ${disk.total_gb ?? '—'} GB total</div>
+      <div class="gauge"><div class="gauge-fill ${gaugeClass(disk.pct ?? 0)}" style="width:${disk.pct ?? 0}%"></div></div>
+    </div>`;
+
+  html += `</div>`;
+
+  // VMs KVM
+  const uptime = res.uptime ?? '—';
+  html += `
+    <div class="section-label" style="margin-bottom:12px;">
+      máquinas virtuais · kvm/libvirt &nbsp;
+      <span style="font-size:10px;color:var(--muted2);letter-spacing:0;">uptime ${uptime}</span>
+    </div>
+    <div class="vm-card">
+      <table class="vm-table">
+        <thead>
+          <tr>
+            <th>nome</th>
+            <th>tipo</th>
+            <th>vcpu</th>
+            <th>ram</th>
+            <th>status</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  if (vms.length === 0) {
+    html += `<tr><td colspan="5" style="color:var(--muted);font-family:var(--mono);font-size:11px;text-align:center;padding:20px;">nenhuma VM encontrada</td></tr>`;
+  } else {
+    for (const vm of vms) {
+      if (vm.error) {
+        html += `<tr><td colspan="5" class="card-error">${escHtml(vm.error)}</td></tr>`;
+        continue;
+      }
+      const dot = vm.running ? 'status-on' : 'status-off';
+      const stTxt = vm.running ? 'status-on-text' : 'status-off-text';
+      html += `
+        <tr>
+          <td><span class="vm-name"><span class="status-dot ${dot}"></span>${escHtml(vm.name)}</span></td>
+          <td><span class="type-badge type-vm">VM</span></td>
+          <td style="font-family:var(--mono);font-size:11px;">${vm.vcpus}</td>
+          <td style="font-family:var(--mono);font-size:11px;">${escHtml(vm.ram)}</td>
+          <td class="${stTxt}" style="font-family:var(--mono);font-size:11px;">${escHtml(vm.status)}</td>
+        </tr>`;
+    }
+  }
+
+  // Containers Docker (se houver)
+  if (containers.length > 0) {
+    html += `
+      <tr>
+        <td colspan="5" style="padding: 0; background: var(--surface2);">
+          <div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:8px 16px 6px;">
+            docker containers
+          </div>
+        </td>
+      </tr>`;
+    for (const ct of containers) {
+      html += `
+        <tr>
+          <td><span class="vm-name"><span class="status-dot status-on"></span>${escHtml(ct.name)}</span></td>
+          <td><span class="type-badge type-ct">CT</span></td>
+          <td colspan="2" style="font-family:var(--mono);font-size:11px;color:var(--muted);">${escHtml(ct.image)}</td>
+          <td class="status-on-text" style="font-family:var(--mono);font-size:11px;">running</td>
+        </tr>`;
+    }
+  }
+
+  html += `</tbody></table></div>`;
+
+  document.getElementById('local-content').innerHTML = html;
+}
+
+// ── Utils ────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── Init ─────────────────────────────────────────────────────
+fetchAll();
+setInterval(() => fetch(`${API}/local`).then(r=>r.json()).then(renderLocal).catch(()=>{}), REFRESH_LOCAL_MS);
+</script>
+</body>
+</html>
