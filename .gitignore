@@ -1,0 +1,30 @@
+# === CREDENCIAIS — NUNCA SUBIR ===
+.env
+*.json
+*.pem
+*.key
+*.p12
+*credentials*
+*secret*
+*_key*
+oci_api_key*
+gcp-credentials*
+
+# === Python ===
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# === Sistema ===
+.DS_Store
+*.log
+*.pid
+
+# === Editor ===
+.vscode/settings.json
+.idea/
