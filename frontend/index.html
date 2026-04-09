@@ -23,6 +23,7 @@
     --aws: #f59e0b;
     --gcp: #3b82f6;
     --oci: #ef4444;
+    --azure: #0ea5e9;
     --font: 'IBM Plex Sans', sans-serif;
     --mono: 'IBM Plex Mono', monospace;
     --radius: 10px;
@@ -99,11 +100,11 @@
   /* ── Cloud grid ──────────────────────── */
   .cloud-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 14px;
     margin-bottom: 32px;
   }
-  @media (max-width: 900px) { .cloud-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 1100px) { .cloud-grid { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 580px) { .cloud-grid { grid-template-columns: 1fr; } }
 
   .cloud-card {
@@ -123,6 +124,7 @@
   .cloud-card.aws::before { background: var(--aws); }
   .cloud-card.gcp::before { background: var(--gcp); }
   .cloud-card.oci::before { background: var(--oci); }
+  .cloud-card.azure::before { background: var(--azure); }
 
   .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
   .provider-pill {
@@ -133,6 +135,7 @@
   .provider-pill.aws { color: var(--aws); border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.08); }
   .provider-pill.gcp { color: var(--blue); border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.08); }
   .provider-pill.oci { color: var(--red); border-color: rgba(239,68,68,.3); background: rgba(239,68,68,.08); }
+  .provider-pill.azure { color: var(--azure); border-color: rgba(14,165,233,.3); background: rgba(14,165,233,.08); }
 
   .provider-name { font-size: 13px; color: var(--muted2); }
   .card-total { font-family: var(--mono); font-size: 28px; font-weight: 400; margin-bottom: 4px; letter-spacing: -.5px; }
@@ -371,7 +374,7 @@ function renderCloud(providers) {
       servicesHtml = `<ul class="services-list">`;
       for (const svc of (p.services || [])) {
         const pct = Math.round((svc.cost / maxCost) * 100);
-        const color = cls === 'aws' ? '#f59e0b' : cls === 'gcp' ? '#3b82f6' : '#ef4444';
+        const color = cls === 'aws' ? '#f59e0b' : cls === 'gcp' ? '#3b82f6' : cls === 'azure' ? '#0ea5e9' : '#ef4444';
         servicesHtml += `
           <li>
             <div class="service-row">
@@ -400,9 +403,10 @@ function renderCloud(providers) {
   html += `</div>`;
 
   // Barra de total
-  const awsP  = providers.find(p => p.provider === 'AWS');
-  const gcpP  = providers.find(p => p.provider === 'GCP');
-  const ociP  = providers.find(p => p.provider === 'OCI');
+  const awsP   = providers.find(p => p.provider === 'AWS');
+  const gcpP   = providers.find(p => p.provider === 'GCP');
+  const ociP   = providers.find(p => p.provider === 'OCI');
+  const azureP = providers.find(p => p.provider === 'Azure');
   html += `
     <div class="total-bar">
       <div>
@@ -410,9 +414,10 @@ function renderCloud(providers) {
         <div class="total-bar-val">$${total.toFixed(2)}</div>
       </div>
       <div class="total-bar-breakdown">
-        ${awsP ? `<div class="breakdown-item"><span class="breakdown-label">AWS</span><span class="breakdown-val" style="color:var(--aws)">$${awsP.total.toFixed(2)}</span></div>` : ''}
-        ${gcpP ? `<div class="breakdown-item"><span class="breakdown-label">GCP</span><span class="breakdown-val" style="color:var(--gcp)">$${gcpP.total.toFixed(2)}</span></div>` : ''}
-        ${ociP ? `<div class="breakdown-item"><span class="breakdown-label">OCI</span><span class="breakdown-val" style="color:var(--oci)">$${ociP.total.toFixed(2)}</span></div>` : ''}
+        ${awsP   ? `<div class="breakdown-item"><span class="breakdown-label">AWS</span><span class="breakdown-val" style="color:var(--aws)">$${awsP.total.toFixed(2)}</span></div>` : ''}
+        ${gcpP   ? `<div class="breakdown-item"><span class="breakdown-label">GCP</span><span class="breakdown-val" style="color:var(--gcp)">$${gcpP.total.toFixed(2)}</span></div>` : ''}
+        ${ociP   ? `<div class="breakdown-item"><span class="breakdown-label">OCI</span><span class="breakdown-val" style="color:var(--oci)">$${ociP.total.toFixed(2)}</span></div>` : ''}
+        ${azureP ? `<div class="breakdown-item"><span class="breakdown-label">Azure</span><span class="breakdown-val" style="color:var(--azure)">$${azureP.total.toFixed(2)}</span></div>` : ''}
       </div>
     </div>`;
 

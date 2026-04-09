@@ -6,6 +6,7 @@ Flask + Gunicorn | coleta dados de GCP, AWS, OCI e KVM local
 import os, time, json, threading
 from flask import Flask, jsonify
 from dotenv import load_dotenv
+from .collectors.azure import get_costs as collect_azure
 from .collectors.aws import collect_aws
 from .collectors.gcp import collect_gcp
 from .collectors.oci import collect_oci
@@ -52,9 +53,11 @@ def summary():
     aws   = get_cached("aws",   CACHE_TTL_CLOUD, collect_aws)
     gcp   = get_cached("gcp",   CACHE_TTL_CLOUD, collect_gcp)
     oci   = get_cached("oci",   CACHE_TTL_CLOUD, collect_oci)
+    azure = get_cached("azure", CACHE_TTL_CLOUD, collect_azure)
     local = get_cached("local", CACHE_TTL_LOCAL, collect_local)
+
     return jsonify({
-        "cloud": [aws, gcp, oci],
+        "cloud": [aws, gcp, oci, azure],
         "local": local,
         "ts": time.time(),
     })
@@ -65,7 +68,9 @@ def cloud_only():
     aws = get_cached("aws", CACHE_TTL_CLOUD, collect_aws)
     gcp = get_cached("gcp", CACHE_TTL_CLOUD, collect_gcp)
     oci = get_cached("oci", CACHE_TTL_CLOUD, collect_oci)
-    return jsonify([aws, gcp, oci])
+    azure = get_cached("azure", CACHE_TTL_CLOUD, collect_azure) 
+    return jsonify([aws, gcp, oci, azure])
+    
 
 
 @app.route("/api/local")
