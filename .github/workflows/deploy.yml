@@ -1,26 +1,31 @@
 name: Deploy InfraDash
- 
+
 on:
   push:
     branches:
       - main
- 
+
 jobs:
   deploy:
     name: Deploy via SSH
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
- 
+
+      - name: Conectar ao Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
       - name: Configurar chave SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
- 
+
       - name: Copiar arquivos para o servidor
         run: |
           rsync -avz --delete \
@@ -33,7 +38,7 @@ jobs:
             --exclude='__pycache__/' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/infradash/
- 
+
       - name: Reiniciar serviço
         run: |
           ssh -i ~/.ssh/deploy_key \
