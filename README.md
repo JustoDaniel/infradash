@@ -17,6 +17,7 @@
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.x-000000?logo=flask)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-24_LTS-E95420?logo=ubuntu&logoColor=white)
+![Clouds](https://img.shields.io/badge/Clouds-AWS%20%7C%20GCP%20%7C%20OCI%20%7C%20Azure-0ea5e9)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
@@ -27,7 +28,7 @@
 
 O **InfraDash** é um dashboard leve de monitoramento hospedado no seu próprio homelab. Ele centraliza em uma única tela:
 
-- 💸 **Custo atual** de cada cloud (AWS, GCP, OCI) com breakdown por serviço
+- 💸 **Custo atual** de cada cloud (AWS, GCP, OCI, Azure) com breakdown por serviço
 - 🖥️ **Recursos do homelab** — CPU, RAM e disco em tempo real
 - 🤖 **Máquinas virtuais KVM** — quais estão ligadas, suas specs e uptime
 
@@ -61,10 +62,11 @@ Tudo isso com uma esteira CI/CD completa: cada `git push` na branch `main` faz d
 │      ▼                                                          │
 │   Gunicorn + Flask  (backend)                                   │
 │      │                                                          │
-│      ├──► AWS Cost Explorer API    ──► cache 1h                 │
-│      ├──► GCP Cloud Billing API    ──► cache 1h                 │
-│      ├──► OCI Usage & Cost API     ──► cache 1h                 │
-│      └──► psutil + libvirt (local) ──► cache 30s               │
+│      ├──► AWS Cost Explorer API        ──► cache 1h                 │
+│      ├──► GCP Cloud Billing API        ──► cache 1h                 │
+│      ├──► OCI Usage & Cost API         ──► cache 1h                 │
+│      ├──► Azure Cost Management API    ──► cache 1h                 │
+│      └──► psutil + libvirt (local)     ──► cache 30s               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -83,6 +85,7 @@ infradash/
 │       ├── aws.py              # AWS Cost Explorer
 │       ├── gcp.py              # GCP Cloud Billing
 │       ├── oci.py              # OCI Usage & Cost Reports
+│       ├── azure.py            # Azure Cost Management
 │       └── local.py            # psutil + libvirt KVM
 ├── frontend/
 │   └── index.html              # Dashboard (HTML/CSS/JS puro)
@@ -103,7 +106,7 @@ infradash/
 | Nginx | qualquer |
 | Tailscale | qualquer (para CI/CD remoto) |
 
-Contas nas clouds que deseja monitorar: **AWS**, **GCP**, **OCI**.
+Contas nas clouds que deseja monitorar: **AWS**, **GCP**, **OCI**, **Azure**.
 
 ---
 
@@ -187,6 +190,36 @@ OCI_TENANCY_OCID=ocid1.tenancy.oc1..xxxxx
 OCI_REGION=sa-saopaulo-1
 OCI_FINGERPRINT=xx:xx:xx:xx:xx
 OCI_KEY_FILE=/opt/infradash/oci_api_key.pem
+```
+
+> ⚠️ **Nunca versione os arquivos `.env`, `.json` ou `.pem`** — o `.gitignore` já os bloqueia por padrão.
+
+### Azure
+
+1. Instale o **Azure CLI**: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+2. Faça login: `az login`
+3. Crie o Service Principal com permissão de leitura:
+
+```bash
+az ad sp create-for-rbac \
+  --name "infradash-readonly" \
+  --role "Billing Reader" \
+  --scopes "/subscriptions/SUA_SUBSCRIPTION_ID"
+```
+
+4. Instale a lib no venv:
+
+```bash
+sudo /opt/infradash/venv/bin/pip install azure-mgmt-costmanagement azure-identity
+```
+
+5. Preencha no `.env` com os valores retornados pelo comando acima:
+
+```env
+AZURE_CLIENT_ID=appId-retornado
+AZURE_CLIENT_SECRET=password-retornado
+AZURE_TENANT_ID=tenant-retornado
+AZURE_SUBSCRIPTION_ID=sua-subscription-id
 ```
 
 > ⚠️ **Nunca versione os arquivos `.env`, `.json` ou `.pem`** — o `.gitignore` já os bloqueia por padrão.
@@ -306,7 +339,7 @@ Cache de 1h nas APIs cloud evita custos desnecessários de requisição.
 
 - [ ] Alertas por e-mail/Telegram quando custo ultrapassar limite
 - [ ] HTTPS com Let's Encrypt (`infra.seudominio.com.br`)
-- [ ] Suporte a Azure
+- [x] Suporte a Azure ✅
 - [ ] Histórico de custos com gráfico de tendência
 - [ ] Autenticação básica para acesso externo
 
