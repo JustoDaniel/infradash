@@ -28,7 +28,7 @@ jobs:
 
       - name: Copiar arquivos para o servidor
         run: |
-          rsync -avz --delete \
+          rsync -avz --delete --no-times --no-perms \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='.env' \
