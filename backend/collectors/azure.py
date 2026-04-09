@@ -78,16 +78,22 @@ def get_costs() -> dict:
         services.sort(key=lambda x: x["cost"], reverse=True)
 
         return {
+            "provider": "Azure",
+            "label": "Microsoft Azure",
             "total": round(total, 2),
             "currency": currency,
-            "services": services[:8],  # top 8 serviços
+            "services": services[:8],
             "period": f"{first_day.strftime('%d/%m')} – {today.strftime('%d/%m/%Y')}",
+            "delta_pct": 0,
             "error": None,
         }
 
     except Exception as e:
         return {
+            "provider": "Azure",
+            "label": "Microsoft Azure",
             "error": str(e),
             "total": 0,
+            "delta_pct": 0,
             "services": [],
         }
