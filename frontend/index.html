@@ -23,7 +23,6 @@
     --aws: #f59e0b;
     --gcp: #3b82f6;
     --oci: #ef4444;
-    --azure: #0ea5e9;
     --font: 'IBM Plex Sans', sans-serif;
     --mono: 'IBM Plex Mono', monospace;
     --radius: 10px;
@@ -100,11 +99,11 @@
   /* ── Cloud grid ──────────────────────── */
   .cloud-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 14px;
     margin-bottom: 32px;
   }
-  @media (max-width: 1100px) { .cloud-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px) { .cloud-grid { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 580px) { .cloud-grid { grid-template-columns: 1fr; } }
 
   .cloud-card {
@@ -124,7 +123,6 @@
   .cloud-card.aws::before { background: var(--aws); }
   .cloud-card.gcp::before { background: var(--gcp); }
   .cloud-card.oci::before { background: var(--oci); }
-  .cloud-card.azure::before { background: var(--azure); }
 
   .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
   .provider-pill {
@@ -135,7 +133,6 @@
   .provider-pill.aws { color: var(--aws); border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.08); }
   .provider-pill.gcp { color: var(--blue); border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.08); }
   .provider-pill.oci { color: var(--red); border-color: rgba(239,68,68,.3); background: rgba(239,68,68,.08); }
-  .provider-pill.azure { color: var(--azure); border-color: rgba(14,165,233,.3); background: rgba(14,165,233,.08); }
 
   .provider-name { font-size: 13px; color: var(--muted2); }
   .card-total { font-family: var(--mono); font-size: 28px; font-weight: 400; margin-bottom: 4px; letter-spacing: -.5px; }
@@ -221,7 +218,75 @@
   .gauge-amber { background: var(--amber); }
   .gauge-red { background: var(--red); }
 
-  /* ── VM table ────────────────────────── */
+  /* ── Pricing Comparator ─────────────────── */
+  .pricing-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 580px) { .pricing-controls { grid-template-columns: 1fr; } }
+  .pricing-slider-group label {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted); display: block; margin-bottom: 8px;
+  }
+  .pricing-slider-group input[type=range] {
+    width: 100%; accent-color: var(--blue); cursor: pointer;
+  }
+  .slider-val {
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+    display: block; margin-top: 4px;
+  }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 1100px) { .pricing-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 580px)  { .pricing-grid { grid-template-columns: 1fr; } }
+  .pricing-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    position: relative;
+    transition: border-color .2s;
+  }
+  .pricing-card.cheapest { border-color: var(--green); }
+  .pricing-card.cheapest::before {
+    content: '★ mais barato';
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: #fff;
+    font-family: var(--mono); font-size: 10px;
+    padding: 2px 10px; border-radius: 99px; white-space: nowrap;
+  }
+  .pricing-instance {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pricing-price {
+    font-family: var(--mono); font-size: 26px; font-weight: 400; margin-bottom: 2px;
+  }
+  .pricing-unit { font-size: 11px; color: var(--muted2); margin-bottom: 10px; }
+  .pricing-specs {
+    font-family: var(--mono); font-size: 11px; color: var(--muted2);
+    padding-top: 8px; border-top: 1px solid var(--border);
+  }
+  .pricing-saving {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    font-size: 12px; color: var(--muted2);
+  }
+  .pricing-saving .hi { color: var(--green); font-family: var(--mono); font-weight: 500; }
+
+
   .vm-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -320,8 +385,31 @@
     <div class="loading">carregando recursos locais...</div>
   </div>
 
+  <!-- ── Pricing Comparator ── -->
+  <div class="section-label" style="margin-top: 8px;">comparador de preços · instâncias compute</div>
+  <div id="pricing-content">
+    <div class="pricing-controls">
+      <div class="pricing-slider-group">
+        <label>vCPUs</label>
+        <input type="range" min="1" max="32" value="4" step="1" id="sl-vcpu" oninput="onSlider()">
+        <span class="slider-val" id="val-vcpu">4</span>
+      </div>
+      <div class="pricing-slider-group">
+        <label>Memória</label>
+        <input type="range" min="1" max="128" value="16" step="1" id="sl-mem" oninput="onSlider()">
+        <span class="slider-val" id="val-mem">16 GB</span>
+      </div>
+      <div class="pricing-slider-group">
+        <label>Horas/mês</label>
+        <input type="range" min="1" max="744" value="730" step="1" id="sl-hours" oninput="onSlider()">
+        <span class="slider-val" id="val-hours">730h</span>
+      </div>
+    </div>
+    <div id="pricing-results"><div class="loading">mova os sliders para comparar...</div></div>
+  </div>
+
   <footer>
-    <span>justodaniel.com.br · infradash v1.0</span>
+    <span>justodaniel.com.br · infradash v2.0</span>
     <span id="footer-ts">—</span>
   </footer>
 </div>
@@ -374,7 +462,7 @@ function renderCloud(providers) {
       servicesHtml = `<ul class="services-list">`;
       for (const svc of (p.services || [])) {
         const pct = Math.round((svc.cost / maxCost) * 100);
-        const color = cls === 'aws' ? '#f59e0b' : cls === 'gcp' ? '#3b82f6' : cls === 'azure' ? '#0ea5e9' : '#ef4444';
+        const color = cls === 'aws' ? '#f59e0b' : cls === 'gcp' ? '#3b82f6' : '#ef4444';
         servicesHtml += `
           <li>
             <div class="service-row">
@@ -403,10 +491,9 @@ function renderCloud(providers) {
   html += `</div>`;
 
   // Barra de total
-  const awsP   = providers.find(p => p.provider === 'AWS');
-  const gcpP   = providers.find(p => p.provider === 'GCP');
-  const ociP   = providers.find(p => p.provider === 'OCI');
-  const azureP = providers.find(p => p.provider === 'Azure');
+  const awsP  = providers.find(p => p.provider === 'AWS');
+  const gcpP  = providers.find(p => p.provider === 'GCP');
+  const ociP  = providers.find(p => p.provider === 'OCI');
   html += `
     <div class="total-bar">
       <div>
@@ -414,10 +501,9 @@ function renderCloud(providers) {
         <div class="total-bar-val">$${total.toFixed(2)}</div>
       </div>
       <div class="total-bar-breakdown">
-        ${awsP   ? `<div class="breakdown-item"><span class="breakdown-label">AWS</span><span class="breakdown-val" style="color:var(--aws)">$${awsP.total.toFixed(2)}</span></div>` : ''}
-        ${gcpP   ? `<div class="breakdown-item"><span class="breakdown-label">GCP</span><span class="breakdown-val" style="color:var(--gcp)">$${gcpP.total.toFixed(2)}</span></div>` : ''}
-        ${ociP   ? `<div class="breakdown-item"><span class="breakdown-label">OCI</span><span class="breakdown-val" style="color:var(--oci)">$${ociP.total.toFixed(2)}</span></div>` : ''}
-        ${azureP ? `<div class="breakdown-item"><span class="breakdown-label">Azure</span><span class="breakdown-val" style="color:var(--azure)">$${azureP.total.toFixed(2)}</span></div>` : ''}
+        ${awsP ? `<div class="breakdown-item"><span class="breakdown-label">AWS</span><span class="breakdown-val" style="color:var(--aws)">$${awsP.total.toFixed(2)}</span></div>` : ''}
+        ${gcpP ? `<div class="breakdown-item"><span class="breakdown-label">GCP</span><span class="breakdown-val" style="color:var(--gcp)">$${gcpP.total.toFixed(2)}</span></div>` : ''}
+        ${ociP ? `<div class="breakdown-item"><span class="breakdown-label">OCI</span><span class="breakdown-val" style="color:var(--oci)">$${ociP.total.toFixed(2)}</span></div>` : ''}
       </div>
     </div>`;
 
@@ -542,8 +628,73 @@ function escHtml(str) {
     .replace(/"/g,'&quot;');
 }
 
+// ── Pricing Comparator ───────────────────────────────────────
+let _pricingTimer = null;
+
+function onSlider() {
+  const vcpu  = document.getElementById('sl-vcpu').value;
+  const mem   = document.getElementById('sl-mem').value;
+  const hours = document.getElementById('sl-hours').value;
+  document.getElementById('val-vcpu').textContent  = vcpu + ' vCPUs';
+  document.getElementById('val-mem').textContent   = mem + ' GB';
+  document.getElementById('val-hours').textContent = hours + 'h';
+  clearTimeout(_pricingTimer);
+  _pricingTimer = setTimeout(() => fetchPricing(vcpu, mem, hours), 400);
+}
+
+async function fetchPricing(vcpu, mem, hours) {
+  document.getElementById('pricing-results').innerHTML = '<div class="loading">buscando preços...</div>';
+  try {
+    const r = await fetch(`${API}/pricing?vcpu=${vcpu}&mem=${mem}&hours=${hours}`);
+    const data = await r.json();
+    renderPricing(data);
+  } catch(e) {
+    document.getElementById('pricing-results').innerHTML = '<div class="loading">erro ao buscar preços</div>';
+  }
+}
+
+function renderPricing(data) {
+  const results = data.results || [];
+  if (!results.length) return;
+
+  const colors = { AWS: '#f59e0b', GCP: '#3b82f6', Azure: '#0ea5e9', OCI: '#ef4444' };
+  const pills  = { AWS: 'aws', GCP: 'gcp', Azure: 'azure', OCI: 'oci' };
+
+  let html = '<div class="pricing-grid">';
+  results.forEach((r, i) => {
+    const color = colors[r.provider] || '#888';
+    const cls   = pills[r.provider] || '';
+    html += `
+      <div class="pricing-card ${i===0?'cheapest':''}">
+        <div style="margin-bottom:8px;">
+          <span class="provider-pill ${cls}">${r.provider}</span>
+        </div>
+        <div class="pricing-instance" title="${escHtml(r.instance_type)}">${escHtml(r.instance_type)}</div>
+        <div class="pricing-price" style="color:${color}">$${r.price_month.toFixed(2)}</div>
+        <div class="pricing-unit">/mês · $${r.price_hour.toFixed(4)}/h</div>
+        <div class="pricing-specs">${r.vcpu} vCPUs · ${r.mem} GB RAM</div>
+      </div>`;
+  });
+  html += '</div>';
+
+  const best  = results[0];
+  const worst = results[results.length-1];
+  html += `
+    <div class="pricing-saving">
+      Escolhendo <span class="hi">${best.provider}</span> (${escHtml(best.instance_type)})
+      ao invés de <span class="hi">${worst.provider}</span>, você economiza
+      <span class="hi">$${data.saving.toFixed(2)}/mês</span> ·
+      <span class="hi">$${data.saving_annual.toFixed(0)}/ano</span>
+      para ${data.requested.vcpu} vCPUs + ${data.requested.mem}GB rodando ${data.requested.hours}h.
+      <span style="color:var(--muted);margin-left:8px;">· preços us-east-1 · cache ${data.cache_ttl_hours}h</span>
+    </div>`;
+
+  document.getElementById('pricing-results').innerHTML = html;
+}
+
 // ── Init ─────────────────────────────────────────────────────
 fetchAll();
+fetchPricing(4, 16, 730);
 setInterval(() => fetch(`${API}/local`).then(r=>r.json()).then(renderLocal).catch(()=>{}), REFRESH_LOCAL_MS);
 </script>
 </body>

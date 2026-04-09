@@ -1,16 +1,17 @@
 """
 InfraDash — Backend API
-Flask + Gunicorn | coleta dados de GCP, AWS, OCI e KVM local
+Flask + Gunicorn | coleta dados de GCP, AWS, OCI, Azure e KVM local
 """
 
 import os, time, json, threading
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 from .collectors.azure import get_costs as collect_azure
 from .collectors.aws import collect_aws
 from .collectors.gcp import collect_gcp
 from .collectors.oci import collect_oci
 from .collectors.local import collect_local
+from .collectors.pricing import compare_prices
 
 load_dotenv()
 
@@ -83,6 +84,21 @@ def clear_cache():
     with _lock:
         _cache.clear()
     return jsonify({"cleared": True})
+
+@app.route("/api/pricing")
+def pricing():
+    """Compara preços de instâncias entre clouds."""
+    try:
+        vcpu  = int(request.args.get("vcpu", 4))
+        mem   = int(request.args.get("mem", 16))
+        hours = int(request.args.get("hours", 730))
+        vcpu  = max(1, min(vcpu, 64))
+        mem   = max(1, min(mem, 512))
+        hours = max(1, min(hours, 744))
+        data = compare_prices(vcpu, mem, hours)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
