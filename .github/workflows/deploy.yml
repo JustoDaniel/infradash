@@ -1,0 +1,42 @@
+name: Deploy InfraDash
+ 
+on:
+  push:
+    branches:
+      - main
+ 
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+ 
+      - name: Configurar chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+ 
+      - name: Copiar arquivos para o servidor
+        run: |
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='*.json' \
+            --exclude='*.pem' \
+            --exclude='venv/' \
+            --exclude='__pycache__/' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/infradash/
+ 
+      - name: Reiniciar serviço
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "sudo systemctl restart infradash && systemctl status infradash --no-pager"
