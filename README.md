@@ -29,6 +29,7 @@
 O **InfraDash** é um dashboard leve de monitoramento hospedado no seu próprio homelab. Ele centraliza em uma única tela:
 
 - 💸 **Custo atual** de cada cloud (AWS, GCP, OCI, Azure) com breakdown por serviço
+- 🔍 **Comparador de preços** — configure vCPU, RAM e horas e veja qual cloud está mais barata agora, com preços reais via APIs públicas e cache de 24h
 - 🖥️ **Recursos do homelab** — CPU, RAM e disco em tempo real
 - 🤖 **Máquinas virtuais KVM** — quais estão ligadas, suas specs e uptime
 
@@ -62,11 +63,16 @@ Tudo isso com uma esteira CI/CD completa: cada `git push` na branch `main` faz d
 │      ▼                                                          │
 │   Gunicorn + Flask  (backend)                                   │
 │      │                                                          │
-│      ├──► AWS Cost Explorer API        ──► cache 1h                 │
-│      ├──► GCP Cloud Billing API        ──► cache 1h                 │
-│      ├──► OCI Usage & Cost API         ──► cache 1h                 │
-│      ├──► Azure Cost Management API    ──► cache 1h                 │
-│      └──► psutil + libvirt (local)     ──► cache 30s               │
+│      ├──► AWS Cost Explorer API        ──► cache 1h             │
+│      ├──► GCP Cloud Billing API        ──► cache 1h             │
+│      ├──► OCI Usage & Cost API         ──► cache 1h             │
+│      ├──► Azure Cost Management API    ──► cache 1h             │
+│      ├──► Pricing APIs (público)       ──► cache 24h            │
+│      │     ├── AWS Price List API                               │
+│      │     ├── GCP Billing Catalog API                          │
+│      │     ├── Azure Retail Prices API                          │
+│      │     └── OCI Pricing API                                  │
+│      └──► psutil + libvirt (local)     ──► cache 30s            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -86,6 +92,7 @@ infradash/
 │       ├── gcp.py              # GCP Cloud Billing
 │       ├── oci.py              # OCI Usage & Cost Reports
 │       ├── azure.py            # Azure Cost Management
+│       ├── pricing.py          # Comparador de preços (APIs públicas)
 │       └── local.py            # psutil + libvirt KVM
 ├── frontend/
 │   └── index.html              # Dashboard (HTML/CSS/JS puro)
@@ -146,6 +153,23 @@ O script cuida de tudo:
 ```
 http://IP-DA-SUA-MAQUINA
 ```
+
+---
+
+## 🔍 Comparador de Preços
+
+O InfraDash inclui um comparador de preços em tempo real que busca preços reais de instâncias compute diretamente das APIs públicas de cada cloud — sem necessidade de credenciais.
+
+Configure os sliders de **vCPU**, **RAM** e **horas/mês** e veja instantaneamente qual cloud oferece o melhor preço para aquela configuração, com o tipo de instância equivalente em cada provider.
+
+| Cloud | API de Pricing | Região base |
+|-------|---------------|-------------|
+| AWS | Price List API | us-east-1 |
+| GCP | Cloud Billing Catalog API | us-east1 |
+| Azure | Retail Prices API | eastus |
+| OCI | Pricing API | us-ashburn-1 |
+
+> Os preços são cacheados por **24h** — mudam raramente e o cache evita requisições desnecessárias.
 
 ---
 
@@ -340,6 +364,7 @@ Cache de 1h nas APIs cloud evita custos desnecessários de requisição.
 - [ ] Alertas por e-mail/Telegram quando custo ultrapassar limite
 - [ ] HTTPS com Let's Encrypt (`infra.seudominio.com.br`)
 - [x] Suporte a Azure ✅
+- [x] Comparador de preços entre clouds em tempo real ✅
 - [ ] Histórico de custos com gráfico de tendência
 - [ ] Autenticação básica para acesso externo
 
