@@ -362,7 +362,37 @@ def _fetch_oci_prices():
     return instances
 
 
-# ── Comparador principal ──────────────────────────────────────
+def _fetch_do_prices():
+    """
+    DigitalOcean Droplets — preços on-demand nyc3/us-east
+    Fonte: https://www.digitalocean.com/pricing/droplets (Abr/2026)
+    """
+    cached = _get_cache("do_prices")
+    if cached:
+        return cached
+
+    instances = [
+        {"type": "s-2vcpu-4gb",    "vcpu": 2,  "mem": 4,   "price": 0.036},
+        {"type": "s-2vcpu-8gb",    "vcpu": 2,  "mem": 8,   "price": 0.071},
+        {"type": "s-4vcpu-8gb",    "vcpu": 4,  "mem": 8,   "price": 0.107},
+        {"type": "s-4vcpu-16gb",   "vcpu": 4,  "mem": 16,  "price": 0.143},
+        {"type": "s-8vcpu-16gb",   "vcpu": 8,  "mem": 16,  "price": 0.214},
+        {"type": "s-8vcpu-32gb",   "vcpu": 8,  "mem": 32,  "price": 0.286},
+        {"type": "c-4",            "vcpu": 4,  "mem": 8,   "price": 0.143},
+        {"type": "c-8",            "vcpu": 8,  "mem": 16,  "price": 0.286},
+        {"type": "c-16",           "vcpu": 16, "mem": 32,  "price": 0.571},
+        {"type": "c-32",           "vcpu": 32, "mem": 64,  "price": 1.143},
+        {"type": "m-4vcpu-32gb",   "vcpu": 4,  "mem": 32,  "price": 0.214},
+        {"type": "m-8vcpu-64gb",   "vcpu": 8,  "mem": 64,  "price": 0.429},
+        {"type": "m-16vcpu-128gb", "vcpu": 16, "mem": 128, "price": 0.857},
+        {"type": "m-32vcpu-256gb", "vcpu": 32, "mem": 256, "price": 1.714},
+    ]
+
+    _set_cache("do_prices", instances)
+    return instances
+
+
+
 
 def _best_match(instances, vcpu, mem):
     """
@@ -400,6 +430,7 @@ def compare_prices(vcpu: int, mem: int, hours: int = 730) -> dict:
         "GCP":   {"label": "Google Cloud Platform", "fn": _fetch_gcp_prices},
         "Azure": {"label": "Microsoft Azure",       "fn": _fetch_azure_prices},
         "OCI":   {"label": "Oracle Cloud Infra",    "fn": _fetch_oci_prices},
+        "DO":    {"label": "DigitalOcean",          "fn": _fetch_do_prices},
     }
 
     results = []
