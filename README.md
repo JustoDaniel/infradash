@@ -378,7 +378,7 @@ Cache de 1h nas APIs cloud evita custos desnecessários de requisição.
 ## 🗺️ Roadmap
 
 - [ ] Alertas por e-mail/Telegram quando custo ultrapassar limite
-- [ ] HTTPS com Let's Encrypt (`infra.seudominio.com.br`)
+- [x] HTTPS com Let's Encrypt via Cloudflare (`infra.justodaniel.com.br`) ✅
 - [x] Suporte a Azure ✅
 - [x] Suporte a DigitalOcean ✅
 - [x] Comparador de preços entre clouds em tempo real ✅
