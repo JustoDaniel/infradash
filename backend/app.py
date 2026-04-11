@@ -10,6 +10,7 @@ from .collectors.azure import get_costs as collect_azure
 from .collectors.aws import collect_aws
 from .collectors.gcp import collect_gcp
 from .collectors.oci import collect_oci
+from .collectors.digitalocean import collect_digitalocean
 from .collectors.local import collect_local
 from .collectors.pricing import compare_prices
 
@@ -55,10 +56,11 @@ def summary():
     gcp   = get_cached("gcp",   CACHE_TTL_CLOUD, collect_gcp)
     oci   = get_cached("oci",   CACHE_TTL_CLOUD, collect_oci)
     azure = get_cached("azure", CACHE_TTL_CLOUD, collect_azure)
+    do    = get_cached("do",    CACHE_TTL_CLOUD, collect_digitalocean)
     local = get_cached("local", CACHE_TTL_LOCAL, collect_local)
 
     return jsonify({
-        "cloud": [aws, gcp, oci, azure],
+        "cloud": [aws, gcp, oci, azure, do],
         "local": local,
         "ts": time.time(),
     })
@@ -66,11 +68,12 @@ def summary():
 
 @app.route("/api/cloud")
 def cloud_only():
-    aws = get_cached("aws", CACHE_TTL_CLOUD, collect_aws)
-    gcp = get_cached("gcp", CACHE_TTL_CLOUD, collect_gcp)
-    oci = get_cached("oci", CACHE_TTL_CLOUD, collect_oci)
-    azure = get_cached("azure", CACHE_TTL_CLOUD, collect_azure) 
-    return jsonify([aws, gcp, oci, azure])
+    aws   = get_cached("aws",   CACHE_TTL_CLOUD, collect_aws)
+    gcp   = get_cached("gcp",   CACHE_TTL_CLOUD, collect_gcp)
+    oci   = get_cached("oci",   CACHE_TTL_CLOUD, collect_oci)
+    azure = get_cached("azure", CACHE_TTL_CLOUD, collect_azure)
+    do    = get_cached("do",    CACHE_TTL_CLOUD, collect_digitalocean)
+    return jsonify([aws, gcp, oci, azure, do])
     
 
 
