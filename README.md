@@ -17,7 +17,7 @@
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.x-000000?logo=flask)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-24_LTS-E95420?logo=ubuntu&logoColor=white)
-![Clouds](https://img.shields.io/badge/Clouds-AWS%20%7C%20GCP%20%7C%20OCI%20%7C%20Azure-0ea5e9)
+![Clouds](https://img.shields.io/badge/Clouds-AWS%20%7C%20GCP%20%7C%20OCI%20%7C%20Azure%20%7C%20DO-0069ff)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
@@ -28,7 +28,7 @@
 
 O **InfraDash** é um dashboard leve de monitoramento hospedado no seu próprio homelab. Ele centraliza em uma única tela:
 
-- 💸 **Custo atual** de cada cloud (AWS, GCP, OCI, Azure) com breakdown por serviço
+- 💸 **Custo atual** de cada cloud (AWS, GCP, OCI, Azure, DigitalOcean) com breakdown por serviço
 - 🔍 **Comparador de preços** — configure vCPU, RAM e horas e veja qual cloud está mais barata agora, com preços reais via APIs públicas e cache de 24h
 - 🖥️ **Recursos do homelab** — CPU, RAM e disco em tempo real
 - 🤖 **Máquinas virtuais KVM** — quais estão ligadas, suas specs e uptime
@@ -67,11 +67,13 @@ Tudo isso com uma esteira CI/CD completa: cada `git push` na branch `main` faz d
 │      ├──► GCP Cloud Billing API        ──► cache 1h             │
 │      ├──► OCI Usage & Cost API         ──► cache 1h             │
 │      ├──► Azure Cost Management API    ──► cache 1h             │
+│      ├──► DigitalOcean Billing API     ──► cache 1h             │
 │      ├──► Pricing APIs (público)       ──► cache 24h            │
 │      │     ├── AWS Price List API                               │
 │      │     ├── GCP Billing Catalog API                          │
 │      │     ├── Azure Retail Prices API                          │
-│      │     └── OCI Pricing API                                  │
+│      │     ├── OCI Pricing API                                  │
+│      │     └── DigitalOcean Droplets                            │
 │      └──► psutil + libvirt (local)     ──► cache 30s            │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -92,6 +94,7 @@ infradash/
 │       ├── gcp.py              # GCP Cloud Billing
 │       ├── oci.py              # OCI Usage & Cost Reports
 │       ├── azure.py            # Azure Cost Management
+│       ├── digitalocean.py     # DigitalOcean Billing API
 │       ├── pricing.py          # Comparador de preços (APIs públicas)
 │       └── local.py            # psutil + libvirt KVM
 ├── frontend/
@@ -113,7 +116,7 @@ infradash/
 | Nginx | qualquer |
 | Tailscale | qualquer (para CI/CD remoto) |
 
-Contas nas clouds que deseja monitorar: **AWS**, **GCP**, **OCI**, **Azure**.
+Contas nas clouds que deseja monitorar: **AWS**, **GCP**, **OCI**, **Azure**, **DigitalOcean**.
 
 ---
 
@@ -168,6 +171,7 @@ Configure os sliders de **vCPU**, **RAM** e **horas/mês** e veja instantaneamen
 | GCP | Cloud Billing Catalog API | us-east1 |
 | Azure | Retail Prices API | eastus |
 | OCI | Pricing API | us-ashburn-1 |
+| DigitalOcean | Droplets Pricing (tabela oficial) | nyc3 |
 
 > Os preços são cacheados por **24h** — mudam raramente e o cache evita requisições desnecessárias.
 
@@ -251,6 +255,18 @@ AZURE_SUBSCRIPTION_ID=sua-subscription-id
 ---
 
 ## 🔄 CI/CD com GitHub Actions + Tailscale
+
+1. Acesse **cloud.digitalocean.com → API → Tokens**
+2. Clique em **Generate New Token**
+3. Nome sugerido: `infradash-readonly`
+4. Marque apenas **Read** (sem Write)
+5. Preencha no `.env`:
+
+```env
+DIGITALOCEAN_TOKEN=seu_token_aqui
+```
+
+> ⚠️ **Nunca versione os arquivos `.env`, `.json` ou `.pem`** — o `.gitignore` já os bloqueia por padrão.
 
 A esteira faz deploy automático no seu servidor toda vez que você faz `git push` na branch `main`.
 
@@ -364,6 +380,7 @@ Cache de 1h nas APIs cloud evita custos desnecessários de requisição.
 - [ ] Alertas por e-mail/Telegram quando custo ultrapassar limite
 - [ ] HTTPS com Let's Encrypt (`infra.seudominio.com.br`)
 - [x] Suporte a Azure ✅
+- [x] Suporte a DigitalOcean ✅
 - [x] Comparador de preços entre clouds em tempo real ✅
 - [ ] Histórico de custos com gráfico de tendência
 - [ ] Autenticação básica para acesso externo
