@@ -122,10 +122,11 @@
     content: '';
     position: absolute; top: 0; left: 0; right: 0; height: 2px;
   }
-  .cloud-card.aws::before { background: var(--aws); }
-  .cloud-card.gcp::before { background: var(--gcp); }
-  .cloud-card.oci::before { background: var(--oci); }
-  .cloud-card.do::before  { background: var(--do); }
+  .cloud-card.aws::before   { background: var(--aws); }
+  .cloud-card.gcp::before   { background: var(--gcp); }
+  .cloud-card.oci::before   { background: var(--oci); }
+  .cloud-card.azure::before { background: #0ea5e9; }
+  .cloud-card.do::before    { background: var(--do); }
 
   .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
   .provider-pill {
@@ -248,12 +249,13 @@
   }
   .pricing-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 14px;
     margin-bottom: 14px;
   }
-  @media (max-width: 1100px) { .pricing-grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 580px)  { .pricing-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 1100px) { .pricing-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px)  { .pricing-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px)  { .pricing-grid { grid-template-columns: 1fr; } }
   .pricing-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -669,8 +671,8 @@ function renderPricing(data) {
   const results = data.results || [];
   if (!results.length) return;
 
-  const colors = { AWS: '#f59e0b', GCP: '#3b82f6', Azure: '#0ea5e9', OCI: '#ef4444' };
-  const pills  = { AWS: 'aws', GCP: 'gcp', Azure: 'azure', OCI: 'oci' };
+  const colors = { AWS: '#f59e0b', GCP: '#3b82f6', Azure: '#0ea5e9', OCI: '#ef4444', DO: '#0069ff' };
+  const pills  = { AWS: 'aws', GCP: 'gcp', Azure: 'azure', OCI: 'oci', DO: 'do' };
 
   let html = '<div class="pricing-grid">';
   results.forEach((r, i) => {
