@@ -390,6 +390,7 @@
     </div>
     <div class="header-right">
       <div class="live-dot" id="live-status">atualizando...</div>
+      <button class="refresh-btn" id="clear-btn" onclick="clearCache()">✕ limpar cache</button>
       <button class="refresh-btn" onclick="fetchAll()">↺ refresh</button>
     </div>
   </header>
@@ -441,6 +442,20 @@
 const API = '/api';
 const REFRESH_CLOUD_MS = 60 * 60 * 1000; // 1h (respeita cache)
 const REFRESH_LOCAL_MS = 30 * 1000;        // 30s
+
+// ── Limpar cache ─────────────────────────────────────────────
+async function clearCache() {
+  const btn = document.getElementById('clear-btn');
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    await fetch(`${API}/cache/clear`, { method: 'POST' });
+    await fetchAll();
+  } finally {
+    btn.textContent = '✕ limpar cache';
+    btn.disabled = false;
+  }
+}
 
 // ── Fetch principal ──────────────────────────────────────────
 async function fetchAll() {
