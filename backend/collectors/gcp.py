@@ -24,14 +24,15 @@ def collect_gcp() -> dict:
 
         query = f"""
         SELECT
+          project.id   AS project_id,
+          project.name AS project_name,
           service.description AS service,
           ROUND(SUM(cost), 2) AS total
         FROM `{project_id}.{dataset}.{table}`
         WHERE DATE(usage_start_time) >= '{first}'
           AND DATE(usage_start_time) <= '{today.isoformat()}'
-        GROUP BY service
-        ORDER BY total DESC
-        LIMIT 10
+        GROUP BY project_id, project_name, service
+        ORDER BY project_id, total DESC
         """
 
         url = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/queries"
@@ -43,17 +44,36 @@ def collect_gcp() -> dict:
             return _error(data["error"].get("message", str(data["error"])))
 
         rows = data.get("rows", [])
-        services = []
+        projects_map = {}
         total = 0.0
 
         for row in rows:
             vals = row.get("f", [])
-            if len(vals) >= 2:
-                name = vals[0].get("v", "Outros") or "Outros"
-                cost = float(vals[1].get("v", 0) or 0)
-                if cost > 0:
-                    services.append({"name": name, "cost": round(cost, 2)})
-                    total += cost
+            if len(vals) < 4:
+                continue
+            proj_id   = vals[0].get("v") or "unknown"
+            proj_name = vals[1].get("v") or proj_id
+            svc_name  = vals[2].get("v") or "Outros"
+            cost      = float(vals[3].get("v", 0) or 0)
+            if cost <= 0:
+                continue
+            if proj_id not in projects_map:
+                projects_map[proj_id] = {"id": proj_id, "name": proj_name, "total": 0.0, "services": []}
+            projects_map[proj_id]["services"].append({"name": svc_name, "cost": round(cost, 2)})
+            projects_map[proj_id]["total"] = round(projects_map[proj_id]["total"] + cost, 2)
+            total += cost
+
+        projects = sorted(projects_map.values(), key=lambda p: p["total"], reverse=True)
+
+        # flat services list (top 6 across all projects) for backward compat
+        all_services: dict = {}
+        for proj in projects:
+            for svc in proj["services"]:
+                all_services[svc["name"]] = round(all_services.get(svc["name"], 0) + svc["cost"], 2)
+        services = sorted(
+            [{"name": k, "cost": v} for k, v in all_services.items()],
+            key=lambda s: s["cost"], reverse=True
+        )[:6]
 
         return {
             "provider": "GCP",
@@ -65,6 +85,7 @@ def collect_gcp() -> dict:
             "currency": "USD",
             "delta_pct": 0,
             "services": services,
+            "projects": projects,
             "error": None,
         }
 

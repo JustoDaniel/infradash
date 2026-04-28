@@ -175,6 +175,20 @@
     border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 8px;
   }
 
+  /* GCP project breakdown */
+  .gcp-projects { display: flex; flex-direction: column; gap: 10px; }
+  .gcp-project-block { display: flex; flex-direction: column; gap: 3px; }
+  .gcp-project-header {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px;
+  }
+  .gcp-project-name {
+    font-family: var(--mono); font-size: 11px; color: var(--blue);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gcp-svc-indent {
+    padding-left: 10px;
+  }
+
   /* ── Total bar ───────────────────────── */
   .total-bar {
     background: var(--surface);
@@ -466,6 +480,32 @@ function renderCloud(providers) {
     let servicesHtml = '';
     if (p.error) {
       servicesHtml = `<div class="card-error">⚠ ${escHtml(p.error)}</div>`;
+    } else if (p.provider === 'GCP' && p.projects && p.projects.length > 0) {
+      const maxCost = Math.max(...p.projects.map(pr => pr.total), 1);
+      const color = '#3b82f6';
+      servicesHtml = `<div class="gcp-projects">`;
+      for (const proj of p.projects) {
+        const pct = Math.round((proj.total / maxCost) * 100);
+        const shortName = proj.id || proj.name;
+        servicesHtml += `
+          <div class="gcp-project-block">
+            <div class="gcp-project-header">
+              <span class="gcp-project-name" title="${escHtml(proj.name)}">▸ ${escHtml(shortName)}</span>
+              <span class="service-cost">$${proj.total.toFixed(2)}</span>
+            </div>
+            <div class="service-bar-track" style="margin-bottom:5px;">
+              <div class="service-bar-fill" style="width:${pct}%;background:${color};"></div>
+            </div>`;
+        for (const svc of proj.services) {
+          servicesHtml += `
+            <div class="service-row gcp-svc-indent">
+              <span class="service-name" title="${escHtml(svc.name)}">· ${escHtml(svc.name)}</span>
+              <span class="service-cost" style="color:var(--muted2)">$${svc.cost.toFixed(2)}</span>
+            </div>`;
+        }
+        servicesHtml += `</div>`;
+      }
+      servicesHtml += `</div>`;
     } else {
       const maxCost = Math.max(...(p.services || []).map(s => s.cost), 1);
       servicesHtml = `<ul class="services-list">`;
