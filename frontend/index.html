@@ -366,6 +366,125 @@
   }
   @keyframes blink { 50% { opacity: .3; } }
 
+  /* ── Admin Panel ────────────────────── */
+  .admin-btn {
+    background: var(--surface2); border: 1px solid var(--border-accent);
+    color: var(--muted2); cursor: pointer; padding: 6px 12px;
+    border-radius: var(--radius-sm); font-family: var(--mono); font-size: 11px;
+    transition: color .15s, border-color .15s;
+  }
+  .admin-btn:hover { color: var(--text); border-color: rgba(255,255,255,.25); }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.72);
+    display: flex; align-items: flex-start; justify-content: flex-end;
+    z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .admin-panel {
+    background: var(--surface);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius);
+    width: 100%; max-width: 500px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 22px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .admin-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 22px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .admin-panel-title { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .close-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 18px; padding: 0 4px; line-height: 1;
+  }
+  .close-btn:hover { color: var(--text); }
+
+  .admin-section { margin-bottom: 24px; }
+  .admin-section-title {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: .12em; color: var(--muted); margin-bottom: 10px;
+  }
+  .admin-field { margin-bottom: 12px; }
+  .admin-field label {
+    display: block; font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 5px;
+  }
+  .admin-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border-accent);
+    color: var(--text); padding: 8px 10px; border-radius: var(--radius-sm);
+    font-family: var(--mono); font-size: 11px; outline: none;
+  }
+  .admin-input:focus { border-color: var(--blue); }
+  .admin-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .admin-primary-btn {
+    background: var(--blue); border: none; color: #fff; cursor: pointer;
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    font-family: var(--mono); font-size: 11px;
+    transition: opacity .15s;
+  }
+  .admin-primary-btn:hover { opacity: .85; }
+  .admin-ghost-btn {
+    background: none; border: 1px solid var(--border-accent); color: var(--muted2);
+    cursor: pointer; padding: 8px 14px; border-radius: var(--radius-sm);
+    font-family: var(--mono); font-size: 11px;
+    transition: color .15s, border-color .15s;
+  }
+  .admin-ghost-btn:hover { color: var(--text); border-color: rgba(255,255,255,.25); }
+
+  .billing-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+  .billing-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .billing-item.disabled { opacity: .45; }
+  .billing-info { flex: 1; min-width: 0; }
+  .billing-name { font-size: 12px; color: var(--text); margin-bottom: 2px; }
+  .billing-meta {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .billing-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .toggle-btn {
+    background: none; border: 1px solid var(--border-accent); color: var(--muted2);
+    cursor: pointer; padding: 3px 8px; border-radius: var(--radius-sm);
+    font-family: var(--mono); font-size: 10px; transition: all .15s;
+  }
+  .toggle-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .delete-btn {
+    background: none; border: 1px solid rgba(248,113,113,.25); color: var(--red);
+    cursor: pointer; padding: 3px 8px; border-radius: var(--radius-sm);
+    font-family: var(--mono); font-size: 10px; transition: background .15s;
+  }
+  .delete-btn:hover { background: rgba(248,113,113,.1); }
+
+  .add-form {
+    background: var(--surface2); border: 1px dashed var(--border-accent);
+    border-radius: var(--radius-sm); padding: 14px; margin-top: 8px;
+  }
+  .add-form-title {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted2); margin-bottom: 12px;
+  }
+  .admin-notice {
+    font-family: var(--mono); font-size: 11px; color: var(--amber);
+    background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.2);
+    border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 12px;
+  }
+  #admin-msg {
+    font-family: var(--mono); font-size: 11px; padding: 7px 10px;
+    border-radius: var(--radius-sm); margin-top: 8px; display: none;
+  }
+  #admin-msg.ok   { color: var(--green); background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2); }
+  #admin-msg.err  { color: var(--red);   background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.2); }
+
   /* ── Footer ──────────────────────────── */
   footer {
     margin-top: 48px; padding-top: 20px;
@@ -390,6 +509,7 @@
     </div>
     <div class="header-right">
       <div class="live-dot" id="live-status">atualizando...</div>
+      <button class="admin-btn" onclick="openAdmin()">⚙ Admin</button>
       <button class="refresh-btn" id="clear-btn" onclick="clearCache()">✕ limpar cache</button>
       <button class="refresh-btn" onclick="fetchAll()">↺ refresh</button>
     </div>
@@ -436,6 +556,74 @@
     <span>justodaniel.com.br · infradash v2.0</span>
     <span id="footer-ts">—</span>
   </footer>
+</div>
+
+<!-- ── Admin Modal ── -->
+<div class="modal-overlay hidden" id="admin-overlay" onclick="overlayClick(event)">
+  <div class="admin-panel" id="admin-panel">
+    <div class="admin-panel-header">
+      <span class="admin-panel-title">⚙ Admin · GCP Billing Accounts</span>
+      <button class="close-btn" onclick="closeAdmin()">✕</button>
+    </div>
+
+    <!-- Credentials -->
+    <div class="admin-section">
+      <div class="admin-section-title">Service Account · Credenciais</div>
+      <div class="admin-field">
+        <label>Caminho do arquivo JSON (service account)</label>
+        <input class="admin-input" id="inp-cred-path" type="text"
+               placeholder="/opt/infradash/gcp-credentials.json">
+      </div>
+      <button class="admin-primary-btn" onclick="saveCredentials()">Salvar credenciais</button>
+    </div>
+
+    <!-- Billing Accounts -->
+    <div class="admin-section">
+      <div class="admin-section-title">Billing Accounts configuradas</div>
+      <div class="billing-list" id="billing-list">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;padding:12px;">
+          carregando...
+        </div>
+      </div>
+
+      <!-- Formulário adicionar -->
+      <div class="add-form" id="add-form">
+        <div class="add-form-title">+ Adicionar billing account</div>
+        <div class="admin-field">
+          <label>Nome (identificação)</label>
+          <input class="admin-input" id="inp-name" type="text"
+                 placeholder="My Billing Account">
+        </div>
+        <div class="admin-field">
+          <label>Billing Account ID</label>
+          <input class="admin-input" id="inp-billing-id" type="text"
+                 placeholder="010F20-0DC5CD-C6859C">
+        </div>
+        <div class="admin-row">
+          <div class="admin-field">
+            <label>Project ID (BigQuery)</label>
+            <input class="admin-input" id="inp-project" type="text"
+                   placeholder="meu-projeto-billing">
+          </div>
+          <div class="admin-field">
+            <label>Dataset (padrão: gcp_billing_data)</label>
+            <input class="admin-input" id="inp-dataset" type="text"
+                   placeholder="gcp_billing_data">
+          </div>
+        </div>
+        <div class="admin-notice">
+          O nome da tabela BigQuery será derivado automaticamente do Billing Account ID.<br>
+          Ex: <span id="table-preview" style="color:var(--text);">—</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="admin-primary-btn" onclick="addBilling()">Adicionar</button>
+          <button class="admin-ghost-btn" onclick="clearAddForm()">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="admin-msg"></div>
+  </div>
 </div>
 
 <script>
@@ -765,6 +953,157 @@ function renderPricing(data) {
 fetchAll();
 fetchPricing(4, 16, 730);
 setInterval(() => fetch(`${API}/local`).then(r=>r.json()).then(renderLocal).catch(()=>{}), REFRESH_LOCAL_MS);
+
+// ── Admin Panel ──────────────────────────────────────────────
+
+function openAdmin() {
+  document.getElementById('admin-overlay').classList.remove('hidden');
+  loadAdminConfig();
+}
+
+function closeAdmin() {
+  document.getElementById('admin-overlay').classList.add('hidden');
+  adminMsg('', '');
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('admin-overlay')) closeAdmin();
+}
+
+function adminMsg(text, type) {
+  const el = document.getElementById('admin-msg');
+  el.textContent = text;
+  el.className = type;
+  el.style.display = text ? 'block' : 'none';
+}
+
+async function loadAdminConfig() {
+  try {
+    const r    = await fetch(`${API}/admin/gcp`);
+    const data = await r.json();
+
+    // Credenciais
+    document.getElementById('inp-cred-path').value = data.credentials_path || '';
+
+    // Lista de billings
+    renderBillingList(data.billings || []);
+  } catch(e) {
+    adminMsg('Erro ao carregar configuração: ' + e.message, 'err');
+  }
+}
+
+function renderBillingList(billings) {
+  const container = document.getElementById('billing-list');
+  if (!billings.length) {
+    container.innerHTML = `<div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;padding:14px;">
+      Nenhuma billing account configurada ainda.
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = billings.map(b => `
+    <div class="billing-item ${b.enabled ? '' : 'disabled'}" id="bi-${escHtml(b.id)}">
+      <div class="billing-info">
+        <div class="billing-name">${escHtml(b.name)}</div>
+        <div class="billing-meta">${escHtml(b.billing_account_id)} · projeto: ${escHtml(b.project_id)}</div>
+        <div class="billing-meta" style="color:var(--muted2);">dataset: ${escHtml(b.dataset || 'gcp_billing_data')}</div>
+      </div>
+      <div class="billing-actions">
+        <button class="toggle-btn" onclick="toggleBilling('${escHtml(b.id)}', ${!b.enabled})">
+          ${b.enabled ? 'desativar' : 'ativar'}
+        </button>
+        <button class="delete-btn" onclick="deleteBilling('${escHtml(b.id)}', '${escHtml(b.name)}')">
+          ✕
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+async function saveCredentials() {
+  const path = document.getElementById('inp-cred-path').value.trim();
+  try {
+    const r = await fetch(`${API}/admin/gcp/credentials`, {
+      method:  'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({ credentials_path: path }),
+    });
+    const d = await r.json();
+    if (d.error) { adminMsg(d.error, 'err'); return; }
+    adminMsg('Credenciais salvas com sucesso.', 'ok');
+  } catch(e) {
+    adminMsg('Erro: ' + e.message, 'err');
+  }
+}
+
+async function addBilling() {
+  const name       = document.getElementById('inp-name').value.trim();
+  const billingId  = document.getElementById('inp-billing-id').value.trim();
+  const projectId  = document.getElementById('inp-project').value.trim();
+  const dataset    = document.getElementById('inp-dataset').value.trim() || 'gcp_billing_data';
+
+  if (!name || !billingId || !projectId) {
+    adminMsg('Preencha Nome, Billing Account ID e Project ID.', 'err');
+    return;
+  }
+
+  try {
+    const r = await fetch(`${API}/admin/gcp/billings`, {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({ name, billing_account_id: billingId, project_id: projectId, dataset }),
+    });
+    const d = await r.json();
+    if (d.error) { adminMsg(d.error, 'err'); return; }
+    adminMsg(`Billing "${name}" adicionada! Cache GCP limpo — dados serão recarregados.`, 'ok');
+    clearAddForm();
+    loadAdminConfig();
+  } catch(e) {
+    adminMsg('Erro: ' + e.message, 'err');
+  }
+}
+
+async function toggleBilling(id, enable) {
+  try {
+    await fetch(`${API}/admin/gcp/billings/${id}`, {
+      method:  'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({ enabled: enable }),
+    });
+    loadAdminConfig();
+  } catch(e) {
+    adminMsg('Erro: ' + e.message, 'err');
+  }
+}
+
+async function deleteBilling(id, name) {
+  if (!confirm(`Remover "${name}"?`)) return;
+  try {
+    await fetch(`${API}/admin/gcp/billings/${id}`, { method: 'DELETE' });
+    adminMsg(`"${name}" removida.`, 'ok');
+    loadAdminConfig();
+  } catch(e) {
+    adminMsg('Erro: ' + e.message, 'err');
+  }
+}
+
+function clearAddForm() {
+  ['inp-name','inp-billing-id','inp-project','inp-dataset'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('table-preview').textContent = '—';
+}
+
+// Preview automático do nome da tabela
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('inp-billing-id');
+  if (el) {
+    el.addEventListener('input', () => {
+      const val = el.value.trim().toUpperCase().replace(/-/g, '_');
+      const preview = document.getElementById('table-preview');
+      preview.textContent = val ? `gcp_billing_export_v1_${val}` : '—';
+    });
+  }
+});
 </script>
 </body>
 </html>
