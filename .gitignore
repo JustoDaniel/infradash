@@ -1,3 +1,6 @@
+# === Imagens de evidência — uso local ===
+images/
+
 # === CREDENCIAIS — NUNCA SUBIR ===
 .env
 *.json
