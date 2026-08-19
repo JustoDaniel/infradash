@@ -368,12 +368,12 @@
 
   /* ── Admin Panel ────────────────────── */
   .admin-btn {
-    background: var(--surface2); border: 1px solid var(--border-accent);
-    color: var(--muted2); cursor: pointer; padding: 6px 12px;
+    background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.4);
+    color: var(--blue); cursor: pointer; padding: 6px 14px;
     border-radius: var(--radius-sm); font-family: var(--mono); font-size: 11px;
-    transition: color .15s, border-color .15s;
+    transition: background .15s, border-color .15s;
   }
-  .admin-btn:hover { color: var(--text); border-color: rgba(255,255,255,.25); }
+  .admin-btn:hover { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.7); }
 
   .modal-overlay {
     position: fixed; inset: 0;
