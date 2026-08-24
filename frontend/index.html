@@ -175,6 +175,15 @@
     border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 8px;
   }
 
+  /* Rodapé de status de leitura do card */
+  .card-billing-status {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    text-align: center; margin-top: 14px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+    letter-spacing: .02em;
+  }
+  .card-billing-status.err { color: rgba(248,113,113,.6); }
+
   /* GCP project breakdown */
   .gcp-projects { display: flex; flex-direction: column; gap: 10px; }
   .gcp-project-block { display: flex; flex-direction: column; gap: 3px; }
@@ -652,7 +661,7 @@ async function fetchAll() {
     const r = await fetch(`${API}/summary`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
-    renderCloud(data.cloud);
+    renderCloud(data.cloud, data.ts);
     renderLocal(data.local);
     const ts = new Date(data.ts * 1000).toLocaleString('pt-BR');
     document.getElementById('footer-ts').textContent = `atualizado: ${ts}`;
@@ -664,13 +673,15 @@ async function fetchAll() {
 }
 
 // ── Render Cloud ─────────────────────────────────────────────
-function renderCloud(providers) {
+function renderCloud(providers, ts) {
   if (!providers || !providers.length) {
     document.getElementById('cloud-content').innerHTML = '<div class="loading">sem dados</div>';
     return;
   }
 
   const total = providers.reduce((s, p) => s + (p.total || 0), 0);
+
+  const timeStr = ts ? new Date(ts * 1000).toLocaleTimeString('pt-BR') : '--:--:--';
 
   let html = `<div class="cloud-grid">`;
   for (const p of providers) {
@@ -730,6 +741,9 @@ function renderCloud(providers) {
       servicesHtml += `</ul>`;
     }
 
+    const billingOk = !p.error;
+    const billingStatus = `<div class="card-billing-status ${billingOk ? '' : 'err'}">leitura na billing: ${billingOk ? 'ok' : 'erro'} · última atualização: ${timeStr}</div>`;
+
     html += `
       <div class="cloud-card ${cls}">
         <div class="card-header">
@@ -739,6 +753,7 @@ function renderCloud(providers) {
         <div class="card-total">$${(p.total || 0).toFixed(2)}</div>
         <div class="card-delta ${deltaClass}">${deltaStr}</div>
         ${servicesHtml}
+        ${billingStatus}
       </div>`;
   }
   html += `</div>`;
