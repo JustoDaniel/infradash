@@ -4,6 +4,7 @@ Usa azure-identity + azure-mgmt-costmanagement
 """
 
 import os
+import time
 from datetime import datetime, timedelta
 
 from azure.identity import ClientSecretCredential
@@ -16,6 +17,21 @@ from azure.mgmt.costmanagement.models import (
     QueryGrouping,
     TimeframeType,
 )
+
+
+def _query_with_retry(client, scope, query, max_retries=3):
+    """Chama a API Azure com retry exponencial em caso de 429."""
+    from azure.core.exceptions import HttpResponseError
+    for attempt in range(max_retries):
+        try:
+            return client.query.usage(scope=scope, parameters=query)
+        except HttpResponseError as e:
+            if e.status_code == 429 and attempt < max_retries - 1:
+                wait = (2 ** attempt) * 5  # 5s, 10s, 20s
+                time.sleep(wait)
+                continue
+            raise
+    return None
 
 
 def _get_credentials():
@@ -59,7 +75,7 @@ def get_costs() -> dict:
             ),
         )
 
-        result = client.query.usage(scope=scope, parameters=query)
+        result = _query_with_retry(client, scope, query)
 
         services = []
         total = 0.0

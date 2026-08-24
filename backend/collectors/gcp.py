@@ -41,10 +41,24 @@ def collect_gcp() -> dict:
             )
 
         if not billings:
-            return _error(
-                "Nenhuma billing account GCP configurada. "
-                "Abra o painel Admin (⚙) e adicione suas billing accounts."
-            )
+            # Fallback: variáveis de ambiente (método legado, pré-admin panel)
+            env_project = os.getenv("GCP_PROJECT_ID")
+            env_billing = os.getenv("GCP_BILLING_ACCOUNT_ID")
+            env_dataset = os.getenv("GCP_DATASET", "gcp_billing_data")
+            if env_project and env_billing:
+                billings = [{
+                    "id": "env",
+                    "name": "GCP (via env)",
+                    "billing_account_id": env_billing,
+                    "project_id": env_project,
+                    "dataset": env_dataset,
+                    "enabled": True,
+                }]
+            else:
+                return _error(
+                    "Nenhuma billing account GCP configurada. "
+                    "Abra o painel Admin (⚙) e adicione suas billing accounts."
+                )
 
         credentials = service_account.Credentials.from_service_account_file(
             cred_path, scopes=["https://www.googleapis.com/auth/cloud-platform"]

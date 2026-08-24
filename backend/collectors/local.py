@@ -75,35 +75,92 @@ def _get_resources() -> dict:
 
 
 def _get_vms() -> list:
-    """Lista VMs KVM via libvirt."""
-    vms = []
+    """Lista VMs KVM via libvirt, com fallback para virsh subprocess."""
     try:
         import libvirt
 
         conn = libvirt.openReadOnly("qemu:///system")
         if conn is None:
-            return [{"error": "Não foi possível conectar ao libvirt"}]
+            return _get_vms_virsh()
 
-        # VMs ligadas
+        vms = []
         for dom_id in conn.listDomainsID():
             dom = conn.lookupByID(dom_id)
             info = dom.info()
             vms.append(_parse_vm(dom, info, running=True))
 
-        # VMs desligadas
         for name in conn.listDefinedDomains():
             dom = conn.lookupByName(name)
             info = dom.info()
             vms.append(_parse_vm(dom, info, running=False))
 
         conn.close()
+        return vms
 
     except ImportError:
-        vms.append({"error": "libvirt-python não instalado"})
-    except Exception as e:
-        vms.append({"error": str(e)})
+        return _get_vms_virsh()
+    except Exception:
+        return _get_vms_virsh()
 
-    return vms
+
+def _get_vms_virsh() -> list:
+    """Fallback: coleta VMs via virsh subprocess."""
+    try:
+        # Lista todas as VMs
+        r = subprocess.run(
+            ["virsh", "-c", "qemu:///system", "list", "--all"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if r.returncode != 0:
+            return [{"error": f"virsh: {r.stderr.strip() or 'falha ao listar VMs'}"}]
+
+        vms = []
+        lines = r.stdout.strip().splitlines()
+        # Ignora as 2 linhas de cabeçalho: "Id  Name  State" e "---..."
+        for line in lines[2:]:
+            parts = line.split(None, 2)
+            if len(parts) < 3:
+                continue
+            name = parts[1]
+            state_raw = parts[2].strip()
+            running = state_raw == "running"
+
+            # Detalhes da VM
+            vcpus, ram_mb = 1, 0
+            info_r = subprocess.run(
+                ["virsh", "-c", "qemu:///system", "dominfo", name],
+                capture_output=True, text=True, timeout=5,
+            )
+            for info_line in info_r.stdout.splitlines():
+                if info_line.startswith("CPU(s):"):
+                    try:
+                        vcpus = int(info_line.split(":")[1].strip())
+                    except ValueError:
+                        pass
+                elif info_line.startswith("Max memory:"):
+                    try:
+                        ram_kb = int(info_line.split(":")[1].strip().split()[0])
+                        ram_mb = ram_kb // 1024
+                    except ValueError:
+                        pass
+
+            mem_str = f"{ram_mb // 1024} GB" if ram_mb >= 1024 else f"{ram_mb} MB"
+            vms.append({
+                "name": name,
+                "type": "VM",
+                "vcpus": vcpus,
+                "ram": mem_str,
+                "ram_mb": ram_mb,
+                "running": running,
+                "status": "ligada" if running else "desligada",
+                "error": None,
+            })
+        return vms
+
+    except FileNotFoundError:
+        return [{"error": "libvirt indisponível (virsh não encontrado)"}]
+    except Exception as e:
+        return [{"error": str(e)}]
 
 
 def _parse_vm(dom, info, running: bool) -> dict:
