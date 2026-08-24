@@ -801,8 +801,8 @@ function renderLocal(local) {
   html += `
     <div class="resource-card">
       <div class="res-label">CPU</div>
-      <div class="res-free">${cpu.free_pct ?? '—'}%</div>
-      <div class="res-sub">livre · ${cpu.pct ?? '—'}% em uso · ${cpu.cores_physical ?? '—'} cores físicos</div>
+      <div class="res-free">${cpu.pct ?? '—'}%</div>
+      <div class="res-sub">em uso · ${cpu.free_pct ?? '—'}% livre · ${cpu.cores_physical ?? '—'} cores físicos</div>
       <div class="gauge"><div class="gauge-fill ${gaugeClass(cpu.pct ?? 0)}" style="width:${cpu.pct ?? 0}%"></div></div>
     </div>`;
 
@@ -810,8 +810,8 @@ function renderLocal(local) {
   html += `
     <div class="resource-card">
       <div class="res-label">RAM</div>
-      <div class="res-free">${ram.free_gb ?? '—'} GB</div>
-      <div class="res-sub">livre · ${ram.used_gb ?? '—'} GB em uso de ${ram.total_gb ?? '—'} GB total</div>
+      <div class="res-free">${ram.used_gb ?? '—'} GB</div>
+      <div class="res-sub">em uso · ${ram.free_gb ?? '—'} GB livre de ${ram.total_gb ?? '—'} GB total</div>
       <div class="gauge"><div class="gauge-fill ${gaugeClass(ram.pct ?? 0)}" style="width:${ram.pct ?? 0}%"></div></div>
     </div>`;
 
@@ -819,8 +819,8 @@ function renderLocal(local) {
   html += `
     <div class="resource-card">
       <div class="res-label">Disco</div>
-      <div class="res-free">${disk.free_gb ?? '—'} GB</div>
-      <div class="res-sub">livre · ${disk.used_gb ?? '—'} GB em uso de ${disk.total_gb ?? '—'} GB total</div>
+      <div class="res-free">${disk.used_gb ?? '—'} GB</div>
+      <div class="res-sub">em uso · ${disk.free_gb ?? '—'} GB livre de ${disk.total_gb ?? '—'} GB total</div>
       <div class="gauge"><div class="gauge-fill ${gaugeClass(disk.pct ?? 0)}" style="width:${disk.pct ?? 0}%"></div></div>
     </div>`;
 
