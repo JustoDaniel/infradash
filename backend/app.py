@@ -29,15 +29,25 @@ CACHE_TTL_LOCAL = int(os.getenv("CACHE_TTL_LOCAL", 30))
 
 
 def get_cached(key: str, ttl: int, collector_fn):
-    """Retorna dado do cache ou chama o collector e armazena."""
+    """Retorna dado do cache ou chama o collector e armazena.
+    Se o collector falhar e houver dado anterior sem erro, retorna o dado antigo
+    (stale-on-error) — evita mostrar erro quando API está em rate limit temporário.
+    """
     with _lock:
         entry = _cache.get(key)
         if entry and (time.time() - entry["ts"]) < ttl:
             return entry["data"]
+        stale = entry  # guarda entrada antiga (pode ser None)
+
     try:
         data = collector_fn()
     except Exception as e:
         data = {"error": str(e), "provider": key}
+
+    # Se novo dado tem erro mas existe dado antigo sem erro → mantém dado antigo
+    if data.get("error") and stale and not stale["data"].get("error"):
+        return stale["data"]
+
     with _lock:
         _cache[key] = {"ts": time.time(), "data": data}
     return data

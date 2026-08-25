@@ -73,9 +73,11 @@ def collect_gcp() -> dict:
         projects_map: dict[str, dict] = {}
         grand_total = 0.0
         billing_errors: list[str] = []
+        billings_breakdown: list[dict] = []  # total por billing account
 
         for billing in billings:
             label      = billing.get("name", billing["billing_account_id"])
+            billing_id = billing["billing_account_id"]
             # Credencial específica da billing tem prioridade sobre a global
             cred_path  = billing.get("credentials_path") or global_cred_path
 
@@ -84,6 +86,7 @@ def collect_gcp() -> dict:
                     f"[{label}] Credenciais não configuradas. "
                     "Defina a service account global ou uma específica para esta billing."
                 )
+                billings_breakdown.append({"name": label, "id": billing_id, "total": 0.0, "error": True})
                 continue
 
             if cred_path not in token_cache:
@@ -91,6 +94,7 @@ def collect_gcp() -> dict:
                     token_cache[cred_path] = _get_token(cred_path)
                 except Exception as e:
                     billing_errors.append(f"[{label}] Erro ao autenticar service account: {e}")
+                    billings_breakdown.append({"name": label, "id": billing_id, "total": 0.0, "error": True})
                     continue
 
             headers    = {"Authorization": f"Bearer {token_cache[cred_path]}"}
@@ -115,12 +119,14 @@ def collect_gcp() -> dict:
             url  = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/queries"
             body = {"query": query, "useLegacySql": False, "timeoutMs": 15000}
 
+            billing_total = 0.0
             try:
                 r    = http.post(url, headers=headers, json=body, timeout=20)
                 data = r.json()
 
                 if "error" in data:
                     billing_errors.append(f"[{label}] {data['error'].get('message', str(data['error']))}")
+                    billings_breakdown.append({"name": label, "id": billing_id, "total": 0.0, "error": True})
                     continue
 
                 for row in data.get("rows", []):
@@ -137,10 +143,16 @@ def collect_gcp() -> dict:
                         projects_map[proj_id] = {"id": proj_id, "name": proj_name, "total": 0.0, "services": []}
                     projects_map[proj_id]["services"].append({"name": svc_name, "cost": round(cost, 2)})
                     projects_map[proj_id]["total"] = round(projects_map[proj_id]["total"] + cost, 2)
-                    grand_total += cost
+                    grand_total  += cost
+                    billing_total += cost
+
+                billings_breakdown.append({"name": label, "id": billing_id, "total": round(billing_total, 2), "error": False})
 
             except Exception as e:
                 billing_errors.append(f"[{label}] {e}")
+                billings_breakdown.append({"name": label, "id": billing_id, "total": 0.0, "error": True})
+
+        billings_breakdown.sort(key=lambda b: b["total"], reverse=True)
 
         projects = sorted(projects_map.values(), key=lambda p: p["total"], reverse=True)
 
@@ -155,17 +167,18 @@ def collect_gcp() -> dict:
         )[:10]
 
         return {
-            "provider":   "GCP",
-            "label":      "Google Cloud Platform",
-            "color":      "#2563eb",
-            "bg":         "#dbeafe",
-            "text_color": "#1e40af",
-            "total":      round(grand_total, 2),
-            "currency":   "USD",
-            "delta_pct":  0,
-            "services":   services,
-            "projects":   projects,
-            "error":      "; ".join(billing_errors) if billing_errors else None,
+            "provider":           "GCP",
+            "label":              "Google Cloud Platform",
+            "color":              "#2563eb",
+            "bg":                 "#dbeafe",
+            "text_color":         "#1e40af",
+            "total":              round(grand_total, 2),
+            "currency":           "USD",
+            "delta_pct":          0,
+            "services":           services,
+            "projects":           projects,
+            "billings_breakdown": billings_breakdown,
+            "error":              "; ".join(billing_errors) if billing_errors else None,
         }
 
     except Exception as e:

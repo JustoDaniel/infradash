@@ -19,19 +19,19 @@ from azure.mgmt.costmanagement.models import (
 )
 
 
-def _query_with_retry(client, scope, query, max_retries=3):
-    """Chama a API Azure com retry exponencial em caso de 429."""
+def _query_with_retry(client, scope, query):
+    """Chama a API Azure. Em caso de 429 falha rápido — o get_cached
+    usa dado anterior (stale-on-error) sem bloquear o worker do Gunicorn."""
     from azure.core.exceptions import HttpResponseError
-    for attempt in range(max_retries):
-        try:
-            return client.query.usage(scope=scope, parameters=query)
-        except HttpResponseError as e:
-            if e.status_code == 429 and attempt < max_retries - 1:
-                wait = (2 ** attempt) * 5  # 5s, 10s, 20s
-                time.sleep(wait)
-                continue
-            raise
-    return None
+    try:
+        return client.query.usage(scope=scope, parameters=query)
+    except HttpResponseError as e:
+        if e.status_code == 429:
+            raise RuntimeError(
+                "Azure Cost Management em rate limit (429). "
+                "Exibindo último valor conhecido."
+            ) from e
+        raise
 
 
 def _get_credentials():

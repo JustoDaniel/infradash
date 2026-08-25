@@ -198,6 +198,26 @@
     padding-left: 10px;
   }
 
+  /* Breakdown por billing account no card GCP */
+  .gcp-billing-summary {
+    display: flex; flex-direction: column; gap: 4px;
+    margin-bottom: 10px;
+  }
+  .gcp-billing-row {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px;
+  }
+  .gcp-billing-name {
+    font-family: var(--mono); font-size: 11px; color: var(--muted2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gcp-billing-total {
+    font-family: var(--mono); font-size: 12px; color: var(--text); font-weight: 500;
+  }
+  .gcp-billing-total.err { color: var(--muted); }
+  .gcp-section-sep {
+    border: none; border-top: 1px solid var(--border); margin: 8px 0 10px;
+  }
+
   /* ── Total bar ───────────────────────── */
   .total-bar {
     background: var(--surface);
@@ -699,32 +719,52 @@ function renderCloud(providers, ts) {
     let servicesHtml = '';
     if (p.error) {
       servicesHtml = `<div class="card-error">⚠ ${escHtml(p.error)}</div>`;
-    } else if (p.provider === 'GCP' && p.projects && p.projects.length > 0) {
-      const maxCost = Math.max(...p.projects.map(pr => pr.total), 1);
-      const color = '#3b82f6';
-      servicesHtml = `<div class="gcp-projects">`;
-      for (const proj of p.projects) {
-        const pct = Math.round((proj.total / maxCost) * 100);
-        const shortName = proj.id || proj.name;
-        servicesHtml += `
-          <div class="gcp-project-block">
-            <div class="gcp-project-header">
-              <span class="gcp-project-name" title="${escHtml(proj.name)}">▸ ${escHtml(shortName)}</span>
-              <span class="service-cost">$${proj.total.toFixed(2)}</span>
-            </div>
-            <div class="service-bar-track" style="margin-bottom:5px;">
-              <div class="service-bar-fill" style="width:${pct}%;background:${color};"></div>
-            </div>`;
-        for (const svc of proj.services) {
+    } else if (p.provider === 'GCP') {
+      // ── Breakdown por billing account ──────────────────────────
+      if (p.billings_breakdown && p.billings_breakdown.length > 0) {
+        const maxB = Math.max(...p.billings_breakdown.map(b => b.total), 0.01);
+        servicesHtml += `<div class="gcp-billing-summary">`;
+        for (const b of p.billings_breakdown) {
+          const pct = Math.round((b.total / maxB) * 100);
           servicesHtml += `
-            <div class="service-row gcp-svc-indent">
-              <span class="service-name" title="${escHtml(svc.name)}">· ${escHtml(svc.name)}</span>
-              <span class="service-cost" style="color:var(--muted2)">$${svc.cost.toFixed(2)}</span>
+            <div class="gcp-billing-row">
+              <span class="gcp-billing-name" title="${escHtml(b.id)}">◈ ${escHtml(b.name)}</span>
+              <span class="gcp-billing-total ${b.error ? 'err' : ''}">$${b.total.toFixed(2)}</span>
+            </div>
+            <div class="service-bar-track" style="margin-bottom:4px;">
+              <div class="service-bar-fill" style="width:${pct}%;background:#3b82f6;opacity:.5;"></div>
             </div>`;
         }
         servicesHtml += `</div>`;
       }
-      servicesHtml += `</div>`;
+      // ── Breakdown por projeto ───────────────────────────────────
+      if (p.projects && p.projects.length > 0) {
+        const maxCost = Math.max(...p.projects.map(pr => pr.total), 1);
+        const color = '#3b82f6';
+        servicesHtml += `<hr class="gcp-section-sep"><div class="gcp-projects">`;
+        for (const proj of p.projects) {
+          const pct = Math.round((proj.total / maxCost) * 100);
+          const shortName = proj.id || proj.name;
+          servicesHtml += `
+            <div class="gcp-project-block">
+              <div class="gcp-project-header">
+                <span class="gcp-project-name" title="${escHtml(proj.name)}">▸ ${escHtml(shortName)}</span>
+                <span class="service-cost">$${proj.total.toFixed(2)}</span>
+              </div>
+              <div class="service-bar-track" style="margin-bottom:5px;">
+                <div class="service-bar-fill" style="width:${pct}%;background:${color};"></div>
+              </div>`;
+          for (const svc of proj.services) {
+            servicesHtml += `
+              <div class="service-row gcp-svc-indent">
+                <span class="service-name" title="${escHtml(svc.name)}">· ${escHtml(svc.name)}</span>
+                <span class="service-cost" style="color:var(--muted2)">$${svc.cost.toFixed(2)}</span>
+              </div>`;
+          }
+          servicesHtml += `</div>`;
+        }
+        servicesHtml += `</div>`;
+      }
     } else {
       const maxCost = Math.max(...(p.services || []).map(s => s.cost), 1);
       servicesHtml = `<ul class="services-list">`;
