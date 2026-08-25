@@ -24,21 +24,24 @@ def _table_from_account_id(billing_account_id: str) -> str:
     return f"gcp_billing_export_v1_{normalized}"
 
 
+def _get_token(cred_path: str) -> str:
+    """Autentica uma service account e retorna o bearer token."""
+    from google.oauth2 import service_account
+    import google.auth.transport.requests
+    credentials = service_account.Credentials.from_service_account_file(
+        cred_path, scopes=["https://www.googleapis.com/auth/cloud-platform"]
+    )
+    credentials.refresh(google.auth.transport.requests.Request())
+    return credentials.token
+
+
 def collect_gcp() -> dict:
     try:
-        from google.oauth2 import service_account
-        import google.auth.transport.requests
         import requests as http
 
         config = load_config()
-        cred_path = config.get("credentials_path") or os.getenv("GCP_CREDENTIALS_PATH")
+        global_cred_path = config.get("credentials_path") or os.getenv("GCP_CREDENTIALS_PATH")
         billings = [b for b in config.get("billings", []) if b.get("enabled", True)]
-
-        if not cred_path:
-            return _error(
-                "Credenciais GCP não configuradas. "
-                "Abra o painel Admin (⚙) e informe o caminho do arquivo de service account."
-            )
 
         if not billings:
             # Fallback: variáveis de ambiente (método legado, pré-admin panel)
@@ -60,12 +63,8 @@ def collect_gcp() -> dict:
                     "Abra o painel Admin (⚙) e adicione suas billing accounts."
                 )
 
-        credentials = service_account.Credentials.from_service_account_file(
-            cred_path, scopes=["https://www.googleapis.com/auth/cloud-platform"]
-        )
-        credentials.refresh(google.auth.transport.requests.Request())
-        token = credentials.token
-        headers = {"Authorization": f"Bearer {token}"}
+        # Cache de tokens por arquivo de credenciais — evita re-auth para mesma SA
+        token_cache: dict[str, str] = {}
 
         today = date.today()
         first = today.replace(day=1).isoformat()
@@ -76,10 +75,28 @@ def collect_gcp() -> dict:
         billing_errors: list[str] = []
 
         for billing in billings:
+            label      = billing.get("name", billing["billing_account_id"])
+            # Credencial específica da billing tem prioridade sobre a global
+            cred_path  = billing.get("credentials_path") or global_cred_path
+
+            if not cred_path:
+                billing_errors.append(
+                    f"[{label}] Credenciais não configuradas. "
+                    "Defina a service account global ou uma específica para esta billing."
+                )
+                continue
+
+            if cred_path not in token_cache:
+                try:
+                    token_cache[cred_path] = _get_token(cred_path)
+                except Exception as e:
+                    billing_errors.append(f"[{label}] Erro ao autenticar service account: {e}")
+                    continue
+
+            headers    = {"Authorization": f"Bearer {token_cache[cred_path]}"}
             project_id = billing["project_id"]
             dataset    = billing.get("dataset", "gcp_billing_data")
             table      = billing.get("table") or _table_from_account_id(billing["billing_account_id"])
-            label      = billing.get("name", billing["billing_account_id"])
 
             # Query com breakdown por projeto GCP (útil em orgs com múltiplos projetos)
             query = f"""

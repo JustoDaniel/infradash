@@ -142,6 +142,11 @@ def admin_gcp_add():
     if missing:
         return jsonify({"error": f"Campos obrigatórios: {missing}"}), 400
 
+    # Credencial específica desta billing (opcional — sobrepõe a global)
+    billing_cred = data.get("credentials_path", "").strip()
+    if billing_cred and not Path(billing_cred).is_file():
+        return jsonify({"error": f"Arquivo de credenciais não encontrado: {billing_cred}"}), 400
+
     config = _load_gcp_config()
     entry = {
         "id":                 str(uuid.uuid4())[:8],
@@ -149,6 +154,7 @@ def admin_gcp_add():
         "billing_account_id": data["billing_account_id"].strip().upper(),
         "project_id":         data["project_id"].strip(),
         "dataset":            data.get("dataset", "gcp_billing_data").strip() or "gcp_billing_data",
+        "credentials_path":   billing_cred or None,
         "enabled":            True,
     }
     config["billings"].append(entry)

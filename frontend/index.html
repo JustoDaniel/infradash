@@ -620,6 +620,11 @@
                    placeholder="gcp_billing_data">
           </div>
         </div>
+        <div class="admin-field">
+          <label>Service Account JSON — opcional, sobrepõe a global</label>
+          <input class="admin-input" id="inp-billing-cred" type="text"
+                 placeholder="/opt/infradash/gcp-sa-outra-conta.json">
+        </div>
         <div class="admin-notice">
           O nome da tabela BigQuery será derivado automaticamente do Billing Account ID.<br>
           Ex: <span id="table-preview" style="color:var(--text);">—</span>
@@ -1051,21 +1056,25 @@ async function saveCredentials() {
 }
 
 async function addBilling() {
-  const name       = document.getElementById('inp-name').value.trim();
-  const billingId  = document.getElementById('inp-billing-id').value.trim();
-  const projectId  = document.getElementById('inp-project').value.trim();
-  const dataset    = document.getElementById('inp-dataset').value.trim() || 'gcp_billing_data';
+  const name        = document.getElementById('inp-name').value.trim();
+  const billingId   = document.getElementById('inp-billing-id').value.trim();
+  const projectId   = document.getElementById('inp-project').value.trim();
+  const dataset     = document.getElementById('inp-dataset').value.trim() || 'gcp_billing_data';
+  const billingCred = document.getElementById('inp-billing-cred').value.trim();
 
   if (!name || !billingId || !projectId) {
     adminMsg('Preencha Nome, Billing Account ID e Project ID.', 'err');
     return;
   }
 
+  const payload = { name, billing_account_id: billingId, project_id: projectId, dataset };
+  if (billingCred) payload.credentials_path = billingCred;
+
   try {
     const r = await fetch(`${API}/admin/gcp/billings`, {
       method:  'POST',
       headers: {'Content-Type': 'application/json'},
-      body:    JSON.stringify({ name, billing_account_id: billingId, project_id: projectId, dataset }),
+      body:    JSON.stringify(payload),
     });
     const d = await r.json();
     if (d.error) { adminMsg(d.error, 'err'); return; }
@@ -1102,7 +1111,7 @@ async function deleteBilling(id, name) {
 }
 
 function clearAddForm() {
-  ['inp-name','inp-billing-id','inp-project','inp-dataset'].forEach(id => {
+  ['inp-name','inp-billing-id','inp-project','inp-dataset','inp-billing-cred'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('table-preview').textContent = '—';
